@@ -102,3 +102,15 @@ describe('upcomingReviews', () => {
     assertEqual(u.days.reduce((a, d) => a + d.count, 0), 4); // 3,4,5,8 within 7 days; 2 is at +20; 7 locked
   });
 });
+
+describe('radicals have no reading', () => {
+  it('accuracy ignores mirrored reading counters for radicals', () => {
+    const a = accuracyByType([{ subject_type: 'radical', meaning_correct: 6, meaning_incorrect: 0, reading_correct: 6, reading_incorrect: 0 }]);
+    assertEqual(a.radical.reading, null); assertEqual(a.radical.answers, 6);
+  });
+  it('leeches ignore reading for radicals', () => {
+    const st = [{ subject_id: 1, subject_type: 'radical', meaning_incorrect: 0, meaning_current_streak: 5, reading_incorrect: 9, reading_current_streak: 0 }];
+    const rows = leeches(st, new Map([[1, { subject_id: 1, srs_stage: 3 }]]), new Map([[1, { id: 1, object: 'radical', reading: 'x' }]]));
+    assertEqual(rows, []);
+  });
+});

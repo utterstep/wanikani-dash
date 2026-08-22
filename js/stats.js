@@ -21,6 +21,11 @@ export function srsGroup(stage) {
   return SRS_GROUPS.find((g) => g.stages.includes(stage))?.key ?? null;
 }
 
+/** Radicals and kana vocabulary have no reading; WK mirrors meaning counters into reading_* for them. */
+export function hasReading(subjectType) {
+  return subjectType === 'kanji' || subjectType === 'vocabulary';
+}
+
 /** kana_vocabulary is folded into vocabulary everywhere in the UI. */
 export function normType(t) {
   return t === 'kana_vocabulary' ? 'vocabulary' : t;
@@ -116,7 +121,7 @@ export function accuracyByType(stats) {
     const t = acc[normType(s.subject_type)];
     if (!t) continue;
     t.mc += s.meaning_correct; t.mi += s.meaning_incorrect;
-    t.rc += s.reading_correct; t.ri += s.reading_incorrect;
+    if (hasReading(s.subject_type)) { t.rc += s.reading_correct; t.ri += s.reading_incorrect; }
   }
   const out = {};
   for (const [k, v] of Object.entries(acc)) {
@@ -150,7 +155,7 @@ export function leeches(stats, assignmentsById, subjectsById, { threshold = 1, l
     const sub = subjectsById.get(s.subject_id);
     if (!sub || sub.hidden_at) continue;
     const mScore = leechScore(s.meaning_incorrect, s.meaning_current_streak);
-    const rScore = leechScore(s.reading_incorrect, s.reading_current_streak);
+    const rScore = hasReading(sub.object) ? leechScore(s.reading_incorrect, s.reading_current_streak) : 0;
     const score = Math.max(mScore, rScore);
     if (score < threshold) continue;
     rows.push({
@@ -159,7 +164,7 @@ export function leeches(stats, assignmentsById, subjectsById, { threshold = 1, l
       characters: sub.characters,
       slug: sub.slug,
       meaning: sub.meaning,
-      reading: sub.reading,
+      reading: hasReading(sub.object) ? sub.reading : null,
       level: sub.level,
       srs_stage: a.srs_stage,
       meaning_incorrect: s.meaning_incorrect,

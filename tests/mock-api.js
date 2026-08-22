@@ -25,6 +25,7 @@ export function makeFetch(data, { auth = true, log = [] } = {}) {
     if (auth && token !== 'test-token' && !token.match(/^[0-9a-f-]{36}$/)) return json({ error: 'Unauthorized', code: 401 }, 401);
     const path = u.pathname.replace(/^\/v2\//, '');
     if (path === 'user') return json(data.user);
+    if (path === 'summary') return data.summary ? json(data.summary) : json({ error: 'The personal access token does not grant permission to access this endpoint', code: 401 }, 401);
     const rows = data[path];
     if (!rows) return json({ error: 'Not Found', code: 404 }, 404);
     const after = u.searchParams.get('updated_after');

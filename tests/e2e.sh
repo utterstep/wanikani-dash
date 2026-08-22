@@ -26,6 +26,7 @@ agent-browser eval 'indexedDB.deleteDatabase("wkdash"); localStorage.clear(); lo
 agent-browser wait --fn 'document.getElementById("dashboard") && !document.getElementById("dashboard").hidden' >/dev/null
 agent-browser eval 'document.getElementById("status").textContent' | grep -q "First sync" || { echo "FAIL: no first-sync status"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#cards .card").length' | grep -q 5 || { echo "FAIL: cards"; fail=1; }
+agent-browser eval 'document.getElementById("actions").hidden' | grep -q false || { echo "FAIL: actions row"; fail=1; }
 agent-browser eval 'document.querySelectorAll("svg.chart").length' | grep -q 5 || { echo "FAIL: charts"; fail=1; }
 agent-browser eval 'document.querySelector("#leeches table") !== null' | grep -q true || { echo "FAIL: leeches"; fail=1; }
 agent-browser screenshot tests/screenshot-a.png >/dev/null
@@ -34,6 +35,7 @@ echo "== e2e: second sync (scenario b) produces events"
 agent-browser open "$B/index.html?mock=b" >/dev/null
 agent-browser wait --fn '!document.getElementById("dashboard").hidden && /SRS changes/.test(document.getElementById("status").textContent)' >/dev/null
 agent-browser eval 'document.getElementById("status").textContent' | grep -q "+3 reviews, 4 SRS changes" || { echo "FAIL: second sync status: $(agent-browser eval 'document.getElementById("status").textContent')"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#actions a.cta").length' | grep -q 2 || { echo "FAIL: lesson/review buttons"; fail=1; }
 agent-browser screenshot tests/screenshot-b.png >/dev/null
 
 echo "== e2e: bad key → settings dialog"

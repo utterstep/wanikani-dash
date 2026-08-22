@@ -25,6 +25,21 @@ export async function sync(api, db, { now = new Date() } = {}) {
     subscription: user.data.subscription,
   });
 
+  // 1b. summary (lessons / reviews available right now)
+  try {
+    const summary = await api.getOne('/summary');
+    const avail = (summary.data.reviews ?? []).filter((r) => r.available_at <= nowIso).reduce((n, r) => n + r.subject_ids.length, 0);
+    await db.setMeta('summary', {
+      lessons: (summary.data.lessons ?? []).reduce((n, l) => n + l.subject_ids.length, 0),
+      reviews: avail,
+      next_reviews_at: summary.data.next_reviews_at,
+      at: nowIso,
+    });
+  } catch (e) {
+    if (e.name === 'AuthError') await db.setMeta('summary', null); // token lacks summary scope — fine
+    else throw e;
+  }
+
   // 2. subjects (big, cached permanently; incremental after first run)
   const subjParams = cursors.subjects ? { updated_after: cursors.subjects } : {};
   const subjects = await api.getAll('/subjects', subjParams);
@@ -78,6 +93,7 @@ export async function loadModel(db) {
   ]);
   return {
     user: await db.getMeta('user'),
+    summary: await db.getMeta('summary'),
     lastSync: await db.getMeta('last_sync'),
     historySince: await db.getMeta('history_since'),
     subjects, assignments, stats, progressions, srsEvents, reviewEvents,

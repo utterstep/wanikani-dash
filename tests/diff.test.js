@@ -62,3 +62,11 @@ describe('slim*', () => {
     assert(a.data_updated_at); assertEqual(a.subject_id, 1);
   });
 });
+
+describe('diffStats radicals', () => {
+  it('counts only meaning answers for radicals', () => {
+    const prev = byId([{ subject_id: 1, subject_type: 'radical', meaning_correct: 1, meaning_incorrect: 0, reading_correct: 1, reading_incorrect: 0 }]);
+    const ev = diffStats(prev, [{ subject_id: 1, subject_type: 'radical', meaning_correct: 2, meaning_incorrect: 0, reading_correct: 2, reading_incorrect: 0 }], 'T');
+    assertEqual(ev.reviews, 1); assertEqual(ev.reading_correct_d, 0);
+  });
+});

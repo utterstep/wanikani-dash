@@ -122,15 +122,15 @@ export function diffStats(prevById, next, at) {
     const rc = s.reading_correct - p.reading_correct;
     const ri = s.reading_incorrect - p.reading_incorrect;
     const m = Math.max(0, mc + mi);
-    const r = Math.max(0, rc + ri);
+    const readable = s.subject_type === 'kanji' || s.subject_type === 'vocabulary';
+    const r = readable ? Math.max(0, rc + ri) : 0;
     const n = Math.max(m, r);
     if (n === 0) continue;
     ev.reviews += n;
     ev.items += 1;
     ev.meaning_correct_d += Math.max(0, mc);
     ev.meaning_incorrect_d += Math.max(0, mi);
-    ev.reading_correct_d += Math.max(0, rc);
-    ev.reading_incorrect_d += Math.max(0, ri);
+    if (readable) { ev.reading_correct_d += Math.max(0, rc); ev.reading_incorrect_d += Math.max(0, ri); }
   }
   return ev.reviews > 0 ? ev : null;
 }

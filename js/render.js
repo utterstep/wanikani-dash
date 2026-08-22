@@ -16,6 +16,7 @@ const STAGE_NAME = ['Locked', 'Apprentice I', 'Apprentice II', 'Apprentice III',
 
 export function renderAll(model, { now = new Date() } = {}) {
   renderHeader(model);
+  renderActions(model);
   renderCards(model, now);
   renderSrs(model);
   renderLevels(model, now);
@@ -24,6 +25,21 @@ export function renderAll(model, { now = new Date() } = {}) {
   renderUpcoming(model, now);
   renderLeeches(model);
   $('dashboard').hidden = false;
+}
+
+function renderActions(model) {
+  const sm = model.summary;
+  const el = $('actions');
+  if (!sm) { el.innerHTML = ''; el.hidden = true; return; }
+  const btns = [];
+  if (sm.lessons) btns.push(`<a class="btn cta lessons" href="https://www.wanikani.com/subject-lessons/start" target="_blank" rel="noopener">Lessons <b>${sm.lessons.toLocaleString()}</b></a>`);
+  if (sm.reviews) btns.push(`<a class="btn cta reviews" href="https://www.wanikani.com/subjects/review" target="_blank" rel="noopener">Reviews <b>${sm.reviews.toLocaleString()}</b></a>`);
+  if (!btns.length) {
+    const next = sm.next_reviews_at ? new Date(sm.next_reviews_at) : null;
+    btns.push(`<span class="note">Nothing to do right now${next && next > new Date() ? ` — next reviews ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}.</span>`);
+  }
+  el.innerHTML = btns.join('');
+  el.hidden = false;
 }
 
 function renderHeader(model) {
@@ -107,7 +123,7 @@ function renderAccuracy(model) {
   const acc = accuracyByType(model.stats);
   const pct = (v) => (v == null ? '—' : `${(v * 100).toFixed(1)}%`);
   $('accuracy').innerHTML = `<table class="table"><thead><tr><th>Type</th><th>Meaning</th><th>Reading</th><th>Answers</th></tr></thead><tbody>${
-    TYPES.map((t) => `<tr><td><span class="swatch type-${t.key}"></span>${t.label}</td><td>${pct(acc[t.key].meaning)}</td><td>${pct(acc[t.key].reading)}</td><td>${acc[t.key].answers.toLocaleString()}</td></tr>`).join('')
+    TYPES.map((t) => `<tr><td><span class="swatch type-${t.key}"></span>${t.label}</td><td>${pct(acc[t.key].meaning)}</td><td class="muted">${t.key === 'radical' ? 'n/a' : pct(acc[t.key].reading)}</td><td>${acc[t.key].answers.toLocaleString()}</td></tr>`).join('')
   }</tbody></table>`;
 }
 

@@ -4,7 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 set -a; source .env; set +a
-: "${API_KEY:?API_KEY missing in .env}"
+: "${API_KEY:=${API_TOKEN:-}}"
+: "${API_KEY:?API_KEY or API_TOKEN missing in .env}"
 OUT=tests/fixtures
 mkdir -p "$OUT"
 
@@ -12,6 +13,7 @@ get() { curl -fsS -H "Authorization: Bearer $API_KEY" -H "Wanikani-Revision: 201
 
 get https://api.wanikani.com/v2/user > "$OUT/real-user.json"
 echo "user ok"
+get https://api.wanikani.com/v2/summary > "$OUT/real-summary.json" || echo "summary: token lacks permission (skipped)"
 
 # Collections: follow next_url, concatenate .data arrays.
 collect() {

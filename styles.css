@@ -79,6 +79,13 @@ h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; color: var(--ink-2); l
 .status.warn { background: var(--warn-bg); color: var(--warn-ink); }
 .status.error { background: var(--err-bg); color: var(--err-ink); }
 
+/* call-to-action */
+.cta-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn.cta { text-decoration: none; color: #fff; border: 0; font-size: 15px; padding: 10px 16px; display: inline-flex; gap: 8px; align-items: center; }
+.btn.cta b { background: rgba(255,255,255,.25); border-radius: 999px; padding: 1px 9px; font-weight: 700; }
+.btn.cta.lessons { background: var(--kanji); }
+.btn.cta.reviews { background: var(--radical); }
+
 /* layout */
 main { display: grid; gap: 14px; margin-top: 8px; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }

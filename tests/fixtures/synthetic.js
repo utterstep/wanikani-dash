@@ -81,5 +81,11 @@ export function fixtures(scenario = 'a') {
     data: { level: p.level, unlocked_at: ISO(NOW_A + p.unlocked * DAY), started_at: ISO(NOW_A + p.unlocked * DAY), passed_at: p.passed != null && !p.abandoned ? ISO(NOW_A + p.passed * DAY) : null, completed_at: null, abandoned_at: p.abandoned ? ISO(NOW_A + p.passed * DAY) : null },
   }));
 
-  return { user, subjects, assignments, review_statistics, level_progressions };
+  const summary = { object: 'report', data_updated_at: ISO(now), data: {
+    lessons: [{ available_at: ISO(now), subject_ids: scenario === 'b' ? [8, 9] : [] }],
+    next_reviews_at: ISO(now + 3600e3),
+    reviews: [{ available_at: ISO(now - 3600e3), subject_ids: scenario === 'b' ? [6, 4, 5] : [] }, { available_at: ISO(now + 3600e3), subject_ids: [3] }],
+  } };
+
+  return { user, summary, subjects, assignments, review_statistics, level_progressions };
 }
