@@ -161,6 +161,7 @@ export function attachTooltips(root = document) {
     tip = document.createElement('div');
     tip.id = 'tooltip';
     tip.setAttribute('role', 'status');
+    tip.hidden = true;
     document.body.appendChild(tip);
   }
   const show = (el, ev) => {
