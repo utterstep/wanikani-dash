@@ -1,0 +1,5 @@
+.env
+tests/fixtures/real-*.json
+tests/*.png
+.DS_Store
+.claude/settings.local.json

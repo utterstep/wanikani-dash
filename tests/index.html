@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>running…</title>
+<style>
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; padding: 20px; max-width: 900px; margin: auto; }
+  li { white-space: pre-wrap; padding: 4px 8px; border-radius: 6px; margin: 2px 0; list-style: none; }
+  li[data-status="pass"] { background: #e7f7e9; }
+  li[data-status="fail"] { background: #fde2e2; }
+</style>
+</head>
+<body>
+<h1 id="summary">running…</h1>
+<ul id="results"></ul>
+<script type="module">
+  import { run } from './harness.js';
+  await Promise.all([
+    import('./diff.test.js'),
+    import('./stats.test.js'),
+    import('./charts.test.js'),
+    import('./sync.test.js'),
+  ]);
+  await run();
+</script>
+</body>
+</html>
