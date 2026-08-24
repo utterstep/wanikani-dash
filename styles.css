@@ -19,6 +19,9 @@
   --reviews: #3b82f6;
   --level: #0093dd;
   --level-current: #ff00aa;
+  --lesson: #ffd0ec;
+  --locked: #d3d3dc;
+  --absent: #ececf1;
   --warn-bg: #fff4d6; --warn-ink: #6b4b00;
   --err-bg: #ffe1e1; --err-ink: #7a1010;
   --info-bg: #e3f2ff; --info-ink: #0b4a7a;
@@ -30,6 +33,7 @@
     --bg: #121216; --surface: #1c1c22; --ink: #ededf2; --ink-2: #b0b0bc; --ink-3: #7d7d8a;
     --line: #2c2c34; --grid: #26262e;
     --burned: #9a9aa6; --reviews: #60a5fa;
+    --lesson: #6d2450; --locked: #3f3f4a; --absent: #2a2a33;
     --warn-bg: #3a2e0a; --warn-ink: #ffd57a; --err-bg: #3f1616; --err-ink: #ffb4b4; --info-bg: #0f2d44; --info-ink: #a8d5ff;
     --tip-bg: #ededf2; --tip-ink: #1d1d22;
   }
@@ -38,6 +42,7 @@
   --bg: #121216; --surface: #1c1c22; --ink: #ededf2; --ink-2: #b0b0bc; --ink-3: #7d7d8a;
   --line: #2c2c34; --grid: #26262e;
   --burned: #9a9aa6; --reviews: #60a5fa;
+  --lesson: #6d2450; --locked: #3f3f4a; --absent: #2a2a33;
   --warn-bg: #3a2e0a; --warn-ink: #ffd57a; --err-bg: #3f1616; --err-ink: #ffb4b4; --info-bg: #0f2d44; --info-ink: #a8d5ff;
   --tip-bg: #ededf2; --tip-ink: #1d1d22;
 }
@@ -131,6 +136,45 @@ main { display: grid; gap: 14px; margin-top: 8px; }
 .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 0; margin: 10px 0 0; font-size: 12px; color: var(--ink-2); }
 .legend li { display: flex; align-items: center; gap: 6px; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+
+/* Kanken heat map */
+.mini-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 4px 0 12px; }
+.mini { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.mini-label { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
+.mini-value { font-size: 22px; font-weight: 650; margin: 1px 0; font-variant-numeric: tabular-nums; }
+.mini-sub { font-size: 11px; color: var(--ink-2); }
+
+.strip { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--grid); }
+.strip > span { min-width: 1px; }
+.strip > span:hover { filter: brightness(1.15); }
+
+.heat-grade { margin-top: 18px; }
+.heat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
+.heat-title { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.heat-sub { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.heat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(26px, 1fr)); gap: 2px; margin-top: 6px; }
+.heat {
+  aspect-ratio: 1; display: grid; place-items: center; border-radius: 4px;
+  font-size: 15px; line-height: 1; text-decoration: none; color: var(--ink);
+  font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+}
+.heat:hover, .heat:active { outline: 2px solid var(--ink); outline-offset: -1px; }
+.st-apprentice { background: var(--apprentice); }
+.st-guru { background: var(--guru); }
+.st-master { background: var(--master); }
+.st-enlightened { background: var(--enlightened); }
+.st-burned { background: var(--burned); }
+.st-lesson { background: var(--lesson); }
+.st-locked { background: var(--locked); }
+.st-absent { background: var(--absent); }
+/* Filled = you have it; outlined = WaniKani will teach it; faint = it never will. */
+.heat.st-apprentice, .heat.st-guru, .heat.st-master, .heat.st-enlightened, .heat.st-burned { color: #fff; }
+.heat.st-locked { background: none; box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-2); }
+.heat.st-absent { background: none; color: var(--ink-3); opacity: .55; }
+@media (max-width: 600px) {
+  .heat-grid { grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); }
+  .heat { font-size: 13px; }
+}
 
 #tooltip {
   position: fixed; top: 0; left: 0; z-index: 10; pointer-events: none;
