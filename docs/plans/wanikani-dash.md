@@ -126,3 +126,52 @@ Settings `<dialog>`: API key input, "Save", "Forget key & wipe data" (confirm), 
 ## Out of scope (v1)
 
 Multi-profile, cross-device sync, vacation-adjusted level durations, backend.
+
+---
+
+## Addendum: Kanken coverage heat map
+
+A second way to read the same assignments: instead of "how is WaniKani going", "how much
+of a 漢字検定 level do I already hold". Static data, no new API calls.
+
+### Data
+
+`js/kanji-grades.js` — generated, ~10 kB — maps kanji to their 常用漢字 school grade
+(`'1'`–`'6'`, `'S'` for the secondary-school remainder) plus the 人名用漢字 supplement
+(`'J'`). Source is KANJIDIC2 (© EDRDG, CC BY-SA 4.0) via the npm package `kanjidic2-json`;
+`scripts/build-kanji-grades.mjs` regenerates it and asserts the post-2017 shape
+(80/160/200/202/193/191 = 1026 kyōiku, 1110 secondary, 2136 Jōyō, prefecture kanji in
+grade 4) before writing, so a stale source cannot slip in silently.
+
+### Kanken ↔ Jōyō
+
+| 漢検 | Set | Kanji |
+|---|---|---|
+| 10級–5級 | grades 1–1, 1–2, … 1–6 | 80 / 240 / 440 / 642 / 835 / 1026 |
+| 4級 / 3級 / 準2級 | subsets of the 1110 secondary kanji (313 / 284 / 328) | 1339 / 1623 / 1951 |
+| 2級 | the whole 常用漢字表 | 2136 |
+| 準1級 | ≈ 常用 + 人名用 (approximation) | 2999 of ~3000 |
+
+The first and third rows fall straight out of the grade table. The middle row does not:
+that split is published by the 日本漢字能力検定協会 and is not a function of school grade,
+so those three levels ship as `exact: false` with no grade set and render as disabled
+options — greyed out rather than guessed.
+
+### Code
+
+- `js/kanken.js` (pure) — `KANKEN_LEVELS`, `KANJI_STATES`, `stateOfStage`,
+  `kankenCoverage(levelKey, subjects, assignmentsById)` → per-grade sections of cells
+  `{ch, state, wkLevel, srs_stage, meaning, reading, url}` plus counts and totals, and
+  `nonJoyoWaniKani()` for the inverse (what WaniKani teaches that 2級 never asks for).
+  Cells sort by WaniKani level so the front edge of colour is where your levels stop.
+- `js/render.js` — `renderKanken()`: four mini stat tiles, a proportional progress strip
+  per level and per grade, and one `.heat-grid` of `<a>`/`<span>` cells per grade. Plain
+  HTML rather than SVG: 2,000+ glyphs need real text layout, and the existing delegated
+  tooltip picks up `.hit` anywhere under `#dashboard` for free.
+- Colours reuse the SRS palette. Filled = you hold it, outlined = WaniKani will teach it
+  later, faint = WaniKani never will.
+- Selection persists in `localStorage.wk_kanken`, default 5級.
+- `tests/kanken.test.js` — grade-table integrity (counts, no duplicate kanji, prefecture
+  kanji in grade 4), every derivable level reproducing its published count, level nesting,
+  and coverage over the synthetic fixture. `tests/e2e.sh` checks cell counts and the
+  disabled levels in the browser.

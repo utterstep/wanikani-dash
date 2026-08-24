@@ -1,7 +1,7 @@
 import { WkApi, AuthError, OfflineError } from './api.js';
 import { openDb, deleteDb } from './db.js';
 import { sync, loadModel } from './sync.js';
-import { renderAll, setStatus, setProgress } from './render.js';
+import { renderAll, setStatus, setProgress, KANKEN_KEY } from './render.js';
 import { attachTooltips } from './charts.js';
 import { initTheme } from './theme.js';
 
@@ -101,6 +101,10 @@ function wireUi() {
   let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (model?.lastSync) renderAll(model); }, 150); });
   $('days-select').addEventListener('change', (ev) => {
     localStorage.setItem('wk_days', ev.target.value);
+    if (model) renderAll(model);
+  });
+  $('kanken-select').addEventListener('change', (ev) => {
+    localStorage.setItem(KANKEN_KEY, ev.target.value);
     if (model) renderAll(model);
   });
 }
