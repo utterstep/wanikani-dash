@@ -11,7 +11,9 @@ Pick a 漢検 level and the dashboard draws every kanji it asks for, one cell pe
 coloured by where that kanji sits in your WaniKani SRS — burned, enlightened, master,
 guru, apprentice, waiting in your lessons, still locked, or not taught by WaniKani at
 all. Cells are ordered by WaniKani level, so the coloured front edge shows how far your
-levels reach into each school grade.
+levels reach into each school grade. On touch screens the first tap on a cell shows its
+tooltip and the second opens it on WaniKani; on small screens the per-grade grids start
+collapsed, with the summary strips always visible.
 
 The Jōyō grade table is embedded (`js/kanji-grades.js`, ~10 kB, from
 [KANJIDIC2](https://www.edrdg.org/kanjidic/kanjd2index_legacy.html) © EDRDG, CC BY-SA 4.0),

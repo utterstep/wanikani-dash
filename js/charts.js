@@ -154,7 +154,12 @@ export function legend(items) {
   return `<ul class="legend">${items.map((i) => `<li><span class="swatch ${i.cls}"></span>${esc(i.name)}</li>`).join('')}</ul>`;
 }
 
-/** Wire hover/tap tooltips for every .hit inside root. One tooltip element per page. */
+/**
+ * Wire hover/tap tooltips for every .hit inside root. One tooltip element per page.
+ * On touch devices (hover: none) a .hit that is a link needs two taps: the first
+ * shows the tooltip, the second follows the link — otherwise inspecting a mark
+ * would navigate away.
+ */
 export function attachTooltips(root = document) {
   let tip = document.getElementById('tooltip');
   if (!tip) {
@@ -164,8 +169,11 @@ export function attachTooltips(root = document) {
     tip.hidden = true;
     document.body.appendChild(tip);
   }
+  const touch = matchMedia('(hover: none)');
+  let armed = null; // linked .hit whose next tap is allowed to navigate
   const show = (el, ev) => {
-    tip.textContent = el.dataset.tip;
+    const hint = touch.matches && el.href ? '\n(tap again to open)' : '';
+    tip.textContent = el.dataset.tip + hint;
     tip.hidden = false;
     const r = tip.getBoundingClientRect();
     let x = ev.clientX + 12, y = ev.clientY - r.height - 12;
@@ -173,10 +181,19 @@ export function attachTooltips(root = document) {
     if (y < 8) y = ev.clientY + 16;
     tip.style.transform = `translate(${Math.max(8, x)}px, ${y}px)`;
   };
-  const hide = () => { tip.hidden = true; };
+  const hide = () => { tip.hidden = true; armed = null; };
   root.addEventListener('pointerover', (ev) => { const h = ev.target.closest('.hit'); if (h) show(h, ev); });
   root.addEventListener('pointermove', (ev) => { const h = ev.target.closest('.hit'); if (h) show(h, ev); });
-  root.addEventListener('pointerout', (ev) => { if (ev.target.closest('.hit') && !ev.relatedTarget?.closest?.('.hit')) hide(); });
+  // Touch fires pointerout when the finger lifts — keep the tooltip up there,
+  // it hides on the next tap elsewhere or on scroll.
+  root.addEventListener('pointerout', (ev) => { if (ev.pointerType !== 'touch' && ev.target.closest('.hit') && !ev.relatedTarget?.closest?.('.hit')) hide(); });
   root.addEventListener('pointerdown', (ev) => { const h = ev.target.closest('.hit'); if (h) show(h, ev); else hide(); });
+  root.addEventListener('click', (ev) => {
+    if (!touch.matches) return;
+    const h = ev.target.closest('a.hit');
+    if (!h) { armed = null; return; }
+    if (armed !== h) { ev.preventDefault(); armed = h; }
+    else armed = null;
+  });
   document.addEventListener('scroll', hide, { passive: true });
 }

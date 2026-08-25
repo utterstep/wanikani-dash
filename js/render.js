@@ -131,24 +131,33 @@ const GRADE_TITLE = {
   S: 'Secondary school · 中学校以上', J: 'Jinmeiyō · 人名用漢字',
 };
 const GRADE_SHORT = { 1: '小1', 2: '小2', 3: '小3', 4: '小4', 5: '小5', 6: '小6', S: '中学以上', J: '人名用' };
-const STATE_NAME = {
-  burned: 'Burned', enlightened: 'Enlightened', master: 'Master', guru: 'Guru',
-  apprentice: 'Apprentice', lesson: 'Lesson available', locked: 'Locked', absent: 'Not on WaniKani',
-};
+const STATE_NAME = Object.fromEntries(KANJI_STATES.map((s) => [s.key, s.label]));
 const pct = (n, d) => (!d ? '—' : n && n / d < 0.005 ? '<1%' : `${Math.round((n / d) * 100)}%`);
 const passedOf = (c) => c.burned + c.enlightened + c.master + c.guru;
+
+// The heat map is ~2000 DOM nodes and renderAll also runs on resize/other panel
+// changes; rebuild it only when the level or the underlying data changed.
+let kankenRendered = null;
 
 function renderKanken(model) {
   const sel = $('kanken-select');
   if (!sel.options.length) {
+    // Keep option labels short: the closed <select> sizes to its longest option,
+    // and a wide one forces horizontal scroll on phones. The note below the map
+    // explains why some levels are disabled.
     sel.innerHTML = KANKEN_LEVELS.map((l) => {
-      const n = `${l.approx ? '≈' : ''}${l.official.toLocaleString()} kanji`;
-      const why = l.grades ? '' : ' — list not derivable';
-      return `<option value="${l.key}"${l.grades ? '' : ' disabled'}>${esc(l.label)} · ${n}${why}</option>`;
+      const n = `${l.approx ? '≈' : ''}${l.official.toLocaleString()}字`;
+      return `<option value="${l.key}"${l.grades ? '' : ' disabled'}>${esc(l.label)} · ${n}${l.grades ? '' : ' (n/a)'}</option>`;
     }).join('');
+    // Strips sit inside <summary>; a tap on one should show its tooltip, not toggle the section.
+    $('kanken-heat').addEventListener('click', (ev) => { if (ev.target.closest('.strip')) ev.preventDefault(); });
   }
   const level = selectableLevel(localStorage.getItem(KANKEN_KEY));
   sel.value = level.key;
+
+  const cacheKey = `${level.key}|${model.lastSync ?? ''}|${model.subjects.length}`;
+  if (cacheKey === kankenRendered && $('kanken-heat').childElementCount) return;
+  kankenRendered = cacheKey;
 
   const cov = kankenCoverage(level.key, model.subjects, model.assignmentsById);
   $('kanken-sub').textContent = `${level.label} — ${level.sub}`;
@@ -160,17 +169,27 @@ function renderKanken(model) {
     mini('Burned', cov.burned.toLocaleString(), pct(cov.burned, cov.total)),
   ].join('')}</div>${strip(cov.counts, cov.total, level.label)}`;
 
+  // Per-grade grids collapse on small screens: the strips carry the summary,
+  // the grid is drill-down. Toggle state survives re-renders only by accident
+  // of the cache above, which is fine for a personal dashboard.
+  const open = matchMedia('(max-width: 600px)').matches ? '' : ' open';
   $('kanken-heat').innerHTML = cov.sections.map((sec) => `
-    <div class="heat-grade">
-      <div class="heat-head">
-        <span class="heat-title">${esc(GRADE_TITLE[sec.grade])}</span>
-        <span class="heat-sub">${sec.total.toLocaleString()} kanji · ${passedOf(sec.counts).toLocaleString()} passed (${pct(passedOf(sec.counts), sec.total)})</span>
-      </div>
-      ${strip(sec.counts, sec.total, GRADE_TITLE[sec.grade])}
+    <details class="heat-grade"${open}>
+      <summary>
+        <div class="heat-head">
+          <span class="heat-title">${esc(GRADE_TITLE[sec.grade])}</span>
+          <span class="heat-sub">${sec.total.toLocaleString()} kanji · ${passedOf(sec.counts).toLocaleString()} passed (${pct(passedOf(sec.counts), sec.total)})</span>
+        </div>
+        ${strip(sec.counts, sec.total, GRADE_TITLE[sec.grade])}
+      </summary>
       <div class="heat-grid">${sec.cells.map(heatCell).join('')}</div>
-    </div>`).join('');
+    </details>`).join('');
 
-  $('kanken-legend').innerHTML = legend(KANJI_STATES.map((s) => ({ cls: `st-${s.key}`, name: s.label })));
+  // Legend shows a sample cell per state, so outlined (locked) and bare-glyph
+  // (absent) cells look in the legend exactly as they do in the map.
+  $('kanken-legend').innerHTML = `<ul class="legend">${
+    KANJI_STATES.map((s) => `<li><span class="heat st-${s.key}">字</span>${esc(s.label)}</li>`).join('')
+  }</ul>`;
 
   const outside = nonJoyoWaniKani(model.subjects, gradeOf);
   const notes = ['Sorted by WaniKani level, so the coloured front edge is how far your levels reach into each grade.'];

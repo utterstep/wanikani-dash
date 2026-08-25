@@ -35,7 +35,9 @@ echo "== e2e: kanken heat map"
 agent-browser eval 'document.querySelectorAll("#kanken-select option").length' | grep -q 11 || { echo "FAIL: kanken levels"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#kanken-select option[disabled]").length' | grep -q 3 || { echo "FAIL: 4級/3級/準2級 should be disabled"; fail=1; }
 agent-browser eval 'document.getElementById("kanken-select").value' | grep -q '"5"' || { echo "FAIL: kanken default level"; fail=1; }
-agent-browser eval 'document.querySelectorAll("#kanken-heat .heat-grade").length' | grep -q 6 || { echo "FAIL: one section per school grade"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#kanken-heat details.heat-grade").length' | grep -q 6 || { echo "FAIL: one section per school grade"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#kanken-legend .heat").length' | grep -q 8 || { echo "FAIL: legend sample cells"; fail=1; }
+agent-browser eval 'document.documentElement.scrollWidth <= document.documentElement.clientWidth' | grep -q true || { echo "FAIL: page scrolls horizontally"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#kanken-heat .heat").length' | grep -q 1026 || { echo "FAIL: 5級 cell count"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#kanken-heat .heat:not(.st-absent)").length' | grep -q 4 || { echo "FAIL: the 4 fixture kanji should be coloured"; fail=1; }
 agent-browser eval '(() => { const s = document.getElementById("kanken-select"); s.value = "2"; s.dispatchEvent(new Event("change")); return document.querySelectorAll("#kanken-heat .heat").length; })()' | grep -q 2136 || { echo "FAIL: 2級 cell count"; fail=1; }
