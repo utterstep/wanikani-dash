@@ -5,6 +5,8 @@ import {
   SRS_GROUPS, TYPES, levelDurations, projection, srsDistribution, accuracyByType,
   leeches, dailySeries, upcomingReviews, median, dateKey,
 } from './stats.js';
+import { KANKEN_LEVELS, KANJI_STATES, kankenCoverage, selectableLevel, nonJoyoWaniKani } from './kanken.js';
+import { gradeOf } from './kanji-grades.js';
 
 const $ = (id) => document.getElementById(id);
 const widthOf = (id) => Math.max(320, Math.floor($(id).clientWidth || $(id).parentElement.clientWidth || 640));
@@ -21,6 +23,7 @@ export function renderAll(model, { now = new Date() } = {}) {
   renderSrs(model);
   renderLevels(model, now);
   renderDaily(model, now);
+  renderKanken(model);
   renderAccuracy(model);
   renderUpcoming(model, now);
   renderLeeches(model);
@@ -118,6 +121,107 @@ function renderDaily(model, now) {
   const sel = $('days-select');
   if (sel && sel.value !== String(days)) sel.value = String(days);
 }
+
+/* ---------------------------------------------------------------- Kanken --- */
+
+export const KANKEN_KEY = 'wk_kanken';
+const GRADE_TITLE = {
+  1: 'Grade 1 · 小学1年', 2: 'Grade 2 · 小学2年', 3: 'Grade 3 · 小学3年',
+  4: 'Grade 4 · 小学4年', 5: 'Grade 5 · 小学5年', 6: 'Grade 6 · 小学6年',
+  S: 'Secondary school · 中学校以上', J: 'Jinmeiyō · 人名用漢字',
+};
+const GRADE_SHORT = { 1: '小1', 2: '小2', 3: '小3', 4: '小4', 5: '小5', 6: '小6', S: '中学以上', J: '人名用' };
+const STATE_NAME = Object.fromEntries(KANJI_STATES.map((s) => [s.key, s.label]));
+const pct = (n, d) => (!d ? '—' : n && n / d < 0.005 ? '<1%' : `${Math.round((n / d) * 100)}%`);
+const passedOf = (c) => c.burned + c.enlightened + c.master + c.guru;
+
+// The heat map is ~2000 DOM nodes and renderAll also runs on resize/other panel
+// changes; rebuild it only when the level or the underlying data changed.
+let kankenRendered = null;
+
+function renderKanken(model) {
+  const sel = $('kanken-select');
+  if (!sel.options.length) {
+    // Keep option labels short: the closed <select> sizes to its longest option,
+    // and a wide one forces horizontal scroll on phones. The note below the map
+    // explains why some levels are disabled.
+    sel.innerHTML = KANKEN_LEVELS.map((l) => {
+      const n = `${l.approx ? '≈' : ''}${l.official.toLocaleString()}字`;
+      return `<option value="${l.key}"${l.grades ? '' : ' disabled'}>${esc(l.label)} · ${n}${l.grades ? '' : ' (n/a)'}</option>`;
+    }).join('');
+    // Strips sit inside <summary>; a tap on one should show its tooltip, not toggle the section.
+    $('kanken-heat').addEventListener('click', (ev) => { if (ev.target.closest('.strip')) ev.preventDefault(); });
+  }
+  const level = selectableLevel(localStorage.getItem(KANKEN_KEY));
+  sel.value = level.key;
+
+  const cacheKey = `${level.key}|${model.lastSync ?? ''}|${model.subjects.length}`;
+  if (cacheKey === kankenRendered && $('kanken-heat').childElementCount) return;
+  kankenRendered = cacheKey;
+
+  const cov = kankenCoverage(level.key, model.subjects, model.assignmentsById);
+  $('kanken-sub').textContent = `${level.label} — ${level.sub}`;
+
+  $('kanken-summary').innerHTML = `<div class="mini-cards">${[
+    mini('At this level', cov.total.toLocaleString(), level.approx ? `≈${level.official.toLocaleString()} published` : 'kanji in scope'),
+    mini('On WaniKani', cov.onWk.toLocaleString(), `${pct(cov.onWk, cov.total)} of the level`),
+    mini('Passed', passedOf(cov.counts).toLocaleString(), `${pct(passedOf(cov.counts), cov.total)} at Guru or above`),
+    mini('Burned', cov.burned.toLocaleString(), pct(cov.burned, cov.total)),
+  ].join('')}</div>${strip(cov.counts, cov.total, level.label)}`;
+
+  // Per-grade grids collapse on small screens: the strips carry the summary,
+  // the grid is drill-down. Toggle state survives re-renders only by accident
+  // of the cache above, which is fine for a personal dashboard.
+  const open = matchMedia('(max-width: 600px)').matches ? '' : ' open';
+  $('kanken-heat').innerHTML = cov.sections.map((sec) => `
+    <details class="heat-grade"${open}>
+      <summary>
+        <div class="heat-head">
+          <span class="heat-title">${esc(GRADE_TITLE[sec.grade])}</span>
+          <span class="heat-sub">${sec.total.toLocaleString()} kanji · ${passedOf(sec.counts).toLocaleString()} passed (${pct(passedOf(sec.counts), sec.total)})</span>
+        </div>
+        ${strip(sec.counts, sec.total, GRADE_TITLE[sec.grade])}
+      </summary>
+      <div class="heat-grid">${sec.cells.map(heatCell).join('')}</div>
+    </details>`).join('');
+
+  // Legend shows a sample cell per state, so outlined (locked) and bare-glyph
+  // (absent) cells look in the legend exactly as they do in the map.
+  $('kanken-legend').innerHTML = `<ul class="legend">${
+    KANJI_STATES.map((s) => `<li><span class="heat st-${s.key}">字</span>${esc(s.label)}</li>`).join('')
+  }</ul>`;
+
+  const outside = nonJoyoWaniKani(model.subjects, gradeOf);
+  const notes = ['Sorted by WaniKani level, so the coloured front edge is how far your levels reach into each grade.'];
+  if (outside.jinmeiyo.length || outside.other.length) {
+    notes.push(`WaniKani also teaches ${(outside.jinmeiyo.length + outside.other.length).toLocaleString()} kanji outside the Jōyō list (${outside.jinmeiyo.length} jinmeiyō, ${outside.other.length} neither).`);
+  }
+  notes.push('漢検 10級–5級 are exactly 小学1年–6年 of the 常用漢字表 and 2級 is the whole list, so Jōyō grades pin them down. 4級 / 3級 / 準2級 carve the 1,110 secondary-school kanji into 313 / 284 / 328 on a list the 日本漢字能力検定協会 publishes separately — grades cannot recover it, so those are greyed out rather than guessed. 準1級 is approximated as Jōyō + Jinmeiyō (2,999 of its ~3,000 kanji).');
+  notes.push('Grades from KANJIDIC2 © EDRDG, CC BY-SA 4.0.');
+  $('kanken-note').innerHTML = notes.map(esc).join('<br>');
+}
+
+function mini(label, value, sub) {
+  return `<div class="mini"><div class="mini-label">${esc(label)}</div><div class="mini-value">${esc(value)}</div><div class="mini-sub">${esc(sub)}</div></div>`;
+}
+
+function strip(counts, total, what) {
+  const parts = KANJI_STATES.filter((s) => counts[s.key]).map((s) =>
+    `<span class="hit st-${s.key}" style="flex:${counts[s.key]}" data-tip="${esc(`${what} · ${STATE_NAME[s.key]}: ${counts[s.key].toLocaleString()} (${pct(counts[s.key], total)})`)}"></span>`);
+  return `<div class="strip" role="img" aria-label="${esc(`${what}: ${passedOf(counts)} of ${total} passed`)}">${parts.join('')}</div>`;
+}
+
+function heatCell(c) {
+  const where = c.wkLevel ? `${GRADE_SHORT[c.grade]} · WK level ${c.wkLevel}` : `${GRADE_SHORT[c.grade]} · not on WaniKani`;
+  const gloss = c.meaning ? `\n${c.meaning}${c.reading ? ` · ${c.reading}` : ''}` : '';
+  const tip = `${c.ch}\n${where}\n${STATE_NAME[c.state]}${gloss}`;
+  const attrs = `class="heat hit st-${c.state}" data-tip="${esc(tip)}"`;
+  return c.url
+    ? `<a ${attrs} href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.ch)}</a>`
+    : `<span ${attrs}>${esc(c.ch)}</span>`;
+}
+
+/* ------------------------------------------------------------------------- */
 
 function renderAccuracy(model) {
   const acc = accuracyByType(model.stats);
