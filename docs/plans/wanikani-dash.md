@@ -165,11 +165,22 @@ options — greyed out rather than guessed.
   `nonJoyoWaniKani()` for the inverse (what WaniKani teaches that 2級 never asks for).
   Cells sort by WaniKani level so the front edge of colour is where your levels stop.
 - `js/render.js` — `renderKanken()`: four mini stat tiles, a proportional progress strip
-  per level and per grade, and one `.heat-grid` of `<a>`/`<span>` cells per grade. Plain
-  HTML rather than SVG: 2,000+ glyphs need real text layout, and the existing delegated
-  tooltip picks up `.hit` anywhere under `#dashboard` for free.
+  per level and per grade, and one `.heat-grid` of `<a>`/`<span>` cells per grade inside a
+  `<details>` per grade (open on desktop, collapsed ≤600px; the strip lives in the
+  `<summary>` so it stays visible collapsed, and a click on it is prevented from toggling).
+  Plain HTML rather than SVG: 2,000+ glyphs need real text layout, and the existing
+  delegated tooltip picks up `.hit` anywhere under `#dashboard` for free. The panel is
+  ~2,000 DOM nodes, so it memoizes on `(level, lastSync, subjects.length)` and skips
+  re-rendering when `renderAll` fires for resize or other panels.
 - Colours reuse the SRS palette. Filled = you hold it, outlined = WaniKani will teach it
-  later, faint = WaniKani never will.
+  later, faint = WaniKani never will. The legend renders a sample cell per state (not a
+  colour swatch) so outlined/faint states look in the legend as they do in the map; state
+  labels come from `KANJI_STATES` only.
+- Touch: `attachTooltips` gives linked `.hit`s two-tap behaviour on `(hover: none)`
+  devices — first tap shows the tooltip (with an "open" hint), second tap navigates — and
+  no longer hides the tooltip on the `pointerout` that a lifting finger fires.
+- Strips give nonzero segments a 6px minimum width so a single burned kanji doesn't
+  vanish into the rounded-corner clip.
 - Selection persists in `localStorage.wk_kanken`, default 5級.
 - `tests/kanken.test.js` — grade-table integrity (counts, no duplicate kanji, prefecture
   kanji in grade 4), every derivable level reproducing its published count, level nesting,

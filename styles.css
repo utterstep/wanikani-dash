@@ -94,10 +94,10 @@ h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; color: var(--ink-2); l
 /* layout */
 main { display: grid; gap: 14px; margin-top: 8px; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
-.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .panel h2 + h2, .chart-wrap + h2 { margin-top: 18px; }
 .select { font-size: 13px; color: var(--ink-2); }
-.select select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; }
+.select select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; max-width: 100%; }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
@@ -145,10 +145,15 @@ main { display: grid; gap: 14px; margin-top: 8px; }
 .mini-sub { font-size: 11px; color: var(--ink-2); }
 
 .strip { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--grid); }
-.strip > span { min-width: 1px; }
+/* 6px floor: a 1-kanji segment must survive proportional scaling AND the corner clip above. */
+.strip > span { min-width: 6px; }
 .strip > span:hover { filter: brightness(1.15); }
 
 .heat-grade { margin-top: 18px; }
+.heat-grade summary { display: block; list-style: none; cursor: pointer; }
+.heat-grade summary::-webkit-details-marker { display: none; }
+.heat-grade summary .heat-title::before { content: '▸ '; color: var(--ink-3); font-size: 11px; }
+.heat-grade[open] summary .heat-title::before { content: '▾ '; }
 .heat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
 .heat-title { font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .heat-sub { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
@@ -159,6 +164,8 @@ main { display: grid; gap: 14px; margin-top: 8px; }
   font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
 }
 .heat:hover, .heat:active { outline: 2px solid var(--ink); outline-offset: -1px; }
+.legend .heat { width: 18px; height: 18px; aspect-ratio: auto; font-size: 12px; border-radius: 4px; }
+.legend .heat:hover { outline: none; }
 .st-apprentice { background: var(--apprentice); }
 .st-guru { background: var(--guru); }
 .st-master { background: var(--master); }
