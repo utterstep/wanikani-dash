@@ -1,0 +1,33 @@
+name = "wkdash"
+main = "crates/wkdash-worker/build/index.js"
+compatibility_date = "2026-08-01"
+workers_dev = false
+
+# Rust → wasm. Needs cargo, the wasm32-unknown-unknown target and worker-build (see README).
+[build]
+command = "cd crates/wkdash-worker && worker-build --release"
+
+[[routes]]
+pattern = "wkdash.utterstep.app"
+custom_domain = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+[vars]
+WK_API_BASE = "https://api.wanikani.com/v2"
+# The old GitHub Pages origin: its page uploads pre-server history to /api/seed cross-origin.
+ALLOWED_ORIGINS = "https://utterstep.github.io"
+
+[[durable_objects.bindings]]
+name = "ACCOUNT"
+class_name = "AccountDO"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AccountDO"]
+
+[observability]
+enabled = true

@@ -1,116 +1,85 @@
 <!doctype html>
+<!--
+  GitHub Pages page. The dashboard now lives on Cloudflare (see wrangler.toml, site in public/).
+  This page forwards the old github.io URL there — and, because it runs on the old origin, it is
+  the only place that can still read the review history the old version collected in this
+  browser's IndexedDB. If there is any, it offers to upload it to the new site's server first.
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>WaniKani Dashboard</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
+<title>WaniKani Dashboard has moved</title>
+<noscript><meta http-equiv="refresh" content="0; url=https://wkdash.utterstep.app/"></noscript>
+<link rel="stylesheet" href="public/styles.css">
+<style>
+  main { max-width: 560px; margin: 10vh auto; padding: 0 16px; }
+  .panel p { margin: 10px 0; }
+  .dialog-actions { margin-top: 18px; }
+</style>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="logo">鰐</span>
-    <span class="title">WaniKani<br><small>dashboard</small></span>
-  </div>
-  <div class="who">
-    <span id="level-badge" class="badge"></span>
-    <span id="username" class="muted"></span>
-    <span id="last-sync" class="muted small"></span>
-  </div>
-  <div class="actions">
-    <button id="refresh" class="btn" title="Refresh">↻</button>
-    <button id="theme-toggle" class="btn" title="Toggle theme">◐</button>
-    <button id="open-settings" class="btn" title="Settings">⚙</button>
-  </div>
-</header>
-
-<div id="progress" class="progress" hidden></div>
-<div id="status" class="status" hidden></div>
-
-<main id="dashboard" hidden>
-  <section id="actions" class="cta-row" hidden></section>
-  <section id="cards" class="cards"></section>
-
-  <section class="panel">
-    <h2>SRS distribution</h2>
-    <div id="srs-chart" class="chart-wrap"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Days per level</h2>
-    <div id="levels-chart" class="chart-wrap"></div>
-    <p id="levels-note" class="note"></p>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Reviews per day</h2>
-      <label class="select">Last
-        <select id="days-select">
-          <option value="30">30 days</option>
-          <option value="60" selected>60 days</option>
-          <option value="90">90 days</option>
-          <option value="180">180 days</option>
-          <option value="365">365 days</option>
-        </select>
-      </label>
+<main>
+  <section class="panel" id="migrate" hidden>
+    <h2>The dashboard moved to wkdash.utterstep.app</h2>
+    <p id="msg"></p>
+    <p class="note">Upload it and the new site carries on from where this browser left off. Skip it and history on the new site starts today.</p>
+    <div class="dialog-actions">
+      <button id="upload" class="btn primary">Upload history, then continue</button>
+      <a id="go" class="btn">Continue without uploading</a>
     </div>
-    <div id="reviews-chart" class="chart-wrap"></div>
-    <h2>SRS promotions ▲ / demotions ▼</h2>
-    <div id="srs-moves-chart" class="chart-wrap"></div>
-    <p id="history-note" class="note"></p>
+    <p id="err" class="note"></p>
   </section>
-
-  <section class="panel">
-    <h2>Upcoming reviews</h2>
-    <div id="upcoming-chart" class="chart-wrap"></div>
-    <p id="upcoming-note" class="note"></p>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Kanken coverage</h2>
-      <label class="select">漢検
-        <select id="kanken-select"></select>
-      </label>
-    </div>
-    <p id="kanken-sub" class="note"></p>
-    <div id="kanken-summary"></div>
-    <div id="kanken-heat"></div>
-    <div id="kanken-legend"></div>
-    <p id="kanken-note" class="note"></p>
-  </section>
-
-  <section class="panel">
-    <h2>Accuracy</h2>
-    <div id="accuracy"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Leeches</h2>
-    <p class="note">Score = wrong answers ÷ current streak<sup>1.5</sup>; items ≥ 1.0, worst first. Highlighted cell is the weaker side.</p>
-    <div id="leeches"></div>
+  <section class="panel" id="plain" hidden>
+    <p>The dashboard moved to <a id="go2" href="https://wkdash.utterstep.app/">wkdash.utterstep.app</a>.</p>
   </section>
 </main>
+<script type="module">
+  import { openDb } from './public/js/db.js';
+  import { hasLocalHistory, collectSeed } from './public/js/pull.js';
+  import { ServerApi } from './public/js/server.js';
 
-<dialog id="settings">
-  <form id="settings-form" method="dialog">
-    <h2>Settings</h2>
-    <p id="settings-msg" class="note"></p>
-    <label>WaniKani API token
-      <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
-    </label>
-    <p class="note">A read-only <a href="https://www.wanikani.com/settings/personal_access_tokens" target="_blank" rel="noopener">personal access token</a>. Stored only in this browser; requests go straight to api.wanikani.com.</p>
-    <div class="dialog-actions">
-      <button type="submit" class="btn primary">Save</button>
-      <button type="button" id="export" class="btn">Export history</button>
-      <button type="button" id="forget" class="btn danger">Forget key &amp; wipe data</button>
-    </div>
-  </form>
-</dialog>
+  const NEW = 'https://wkdash.utterstep.app';
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const MOCK = params.has('mock'); // tests: fake server in-page, no real redirect
+  params.delete('legacy'); params.delete('mock');
+  const qs = params.toString();
+  const target = `${NEW}/${qs ? `?${qs}` : ''}${location.hash}`;
+  const leave = () => { if (MOCK) { $('plain').hidden = false; $('plain').dataset.done = '1'; } else location.replace(target); };
 
-<script type="module" src="js/main.js"></script>
+  let serverFetch;
+  if (MOCK) ({ server: serverFetch } = await (await import('./tests/mock-api.js')).installMock(params.get('mock') ?? 'a'));
+  for (const a of [$('go'), $('go2')]) a.href = target;
+
+  const key = localStorage.getItem('wk_api_key');
+  const db = await openDb();
+  if (!key || !(await hasLocalHistory(db))) { leave(); }
+  else {
+    const since = new Date(await db.getMeta('history_since')).toLocaleDateString();
+    $('msg').textContent = `This browser holds review history since ${since} (${await db.count('syncs')} syncs) that only exists here.`;
+    $('migrate').hidden = false;
+    $('upload').addEventListener('click', async () => {
+      $('upload').disabled = true;
+      $('err').textContent = 'Uploading…';
+      try {
+        const server = new ServerApi(key, { base: MOCK ? '/api' : `${NEW}/api`, fetch: serverFetch });
+        const st = await server.state(0);
+        if (st.account.status !== 'empty') {
+          $('err').textContent = 'The new site already has history for this account, so nothing was uploaded.';
+        } else {
+          await server.seed(await collectSeed(db));
+          $('err').textContent = 'Uploaded.';
+        }
+        await db.setMeta('server_version', 0); // don't offer again
+        leave();
+      } catch (e) {
+        $('upload').disabled = false;
+        $('err').textContent = e.name === 'AuthError' ? 'WaniKani rejected the token stored here; open the new site and paste a fresh one instead.' : `Upload failed: ${e.message}. Try again, or continue without uploading.`;
+      }
+    });
+  }
+</script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import { describe, it, assertEqual, assertClose, assert } from './harness.js';
-import { levelDurations, projection, srsDistribution, accuracyByType, leeches, leechScore, dailySeries, upcomingReviews, median, dateKey } from '../js/stats.js';
-import { slimAssignment, slimStat, slimSubject, slimProgression } from '../js/diff.js';
+import { levelDurations, projection, srsDistribution, accuracyByType, leeches, leechScore, dailySeries, upcomingReviews, median, dateKey } from '../public/js/stats.js';
+import { slimAssignment, slimStat, slimSubject, slimProgression } from '../public/js/diff.js';
 import { fixtures, NOW_A, NOW_B } from './fixtures/synthetic.js';
 
 const fa = fixtures('a');

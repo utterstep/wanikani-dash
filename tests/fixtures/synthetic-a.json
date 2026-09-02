@@ -1,0 +1,575 @@
+{
+ "user": {
+  "object": "user",
+  "data_updated_at": "2026-08-20T10:00:00.000Z",
+  "data": {
+   "id": "5a6a5234-a392-4a87-8f3f-33342afe8a42",
+   "username": "testuser",
+   "level": 4,
+   "started_at": "2026-07-11T10:00:00.000Z",
+   "current_vacation_started_at": null,
+   "subscription": {
+    "active": true,
+    "type": "lifetime",
+    "max_level_granted": 60
+   }
+  }
+ },
+ "summary": {
+  "object": "report",
+  "data_updated_at": "2026-08-20T10:00:00.000Z",
+  "data": {
+   "lessons": [
+    {
+     "available_at": "2026-08-20T10:00:00.000Z",
+     "subject_ids": []
+    }
+   ],
+   "next_reviews_at": "2026-08-20T11:00:00.000Z",
+   "reviews": [
+    {
+     "available_at": "2026-08-20T09:00:00.000Z",
+     "subject_ids": []
+    },
+    {
+     "available_at": "2026-08-20T11:00:00.000Z",
+     "subject_ids": [
+      3
+     ]
+    }
+   ]
+  }
+ },
+ "subjects": [
+  {
+   "id": 1,
+   "object": "radical",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 1,
+    "object": "radical",
+    "level": 1,
+    "characters": "一",
+    "slug": "ground",
+    "meanings": [
+     {
+      "meaning": "Ground",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/radical/ground",
+    "hidden_at": null,
+    "readings": []
+   }
+  },
+  {
+   "id": 2,
+   "object": "kanji",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 2,
+    "object": "kanji",
+    "level": 1,
+    "characters": "一",
+    "slug": "一",
+    "meanings": [
+     {
+      "meaning": "One",
+      "primary": true
+     }
+    ],
+    "readings": [
+     {
+      "reading": "いち",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/kanji/一",
+    "hidden_at": null
+   }
+  },
+  {
+   "id": 3,
+   "object": "kanji",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 3,
+    "object": "kanji",
+    "level": 2,
+    "characters": "人",
+    "slug": "人",
+    "meanings": [
+     {
+      "meaning": "Person",
+      "primary": true
+     }
+    ],
+    "readings": [
+     {
+      "reading": "にん",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/kanji/人",
+    "hidden_at": null
+   }
+  },
+  {
+   "id": 4,
+   "object": "vocabulary",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 4,
+    "object": "vocabulary",
+    "level": 2,
+    "characters": "人",
+    "slug": "人",
+    "meanings": [
+     {
+      "meaning": "Person",
+      "primary": true
+     }
+    ],
+    "readings": [
+     {
+      "reading": "ひと",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/vocabulary/人",
+    "hidden_at": null
+   }
+  },
+  {
+   "id": 5,
+   "object": "vocabulary",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 5,
+    "object": "vocabulary",
+    "level": 3,
+    "characters": "大人",
+    "slug": "大人",
+    "meanings": [
+     {
+      "meaning": "Adult",
+      "primary": true
+     }
+    ],
+    "readings": [
+     {
+      "reading": "おとな",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/vocabulary/大人",
+    "hidden_at": null
+   }
+  },
+  {
+   "id": 6,
+   "object": "kanji",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 6,
+    "object": "kanji",
+    "level": 3,
+    "characters": "日",
+    "slug": "日",
+    "meanings": [
+     {
+      "meaning": "Sun",
+      "primary": true
+     }
+    ],
+    "readings": [
+     {
+      "reading": "にち",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/kanji/日",
+    "hidden_at": null
+   }
+  },
+  {
+   "id": 7,
+   "object": "kana_vocabulary",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 7,
+    "object": "kana_vocabulary",
+    "level": 3,
+    "characters": "こんにちは",
+    "slug": "こんにちは",
+    "meanings": [
+     {
+      "meaning": "Hello",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/kana_vocabulary/こんにちは",
+    "hidden_at": null,
+    "readings": []
+   }
+  },
+  {
+   "id": 8,
+   "object": "kanji",
+   "data_updated_at": "2026-05-12T10:00:00.000Z",
+   "data": {
+    "id": 8,
+    "object": "kanji",
+    "level": 4,
+    "characters": "月",
+    "slug": "月",
+    "meanings": [
+     {
+      "meaning": "Moon",
+      "primary": true
+     }
+    ],
+    "readings": [
+     {
+      "reading": "げつ",
+      "primary": true
+     }
+    ],
+    "document_url": "https://www.wanikani.com/kanji/月",
+    "hidden_at": null
+   }
+  }
+ ],
+ "assignments": [
+  {
+   "id": 100,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 1,
+    "subject_type": "radical",
+    "srs_stage": 9,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": "2026-07-22T10:00:00.000Z",
+    "passed_at": "2026-08-10T10:00:00.000Z",
+    "burned_at": "2026-08-19T10:00:00.000Z",
+    "available_at": null,
+    "hidden": false
+   }
+  },
+  {
+   "id": 101,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 2,
+    "subject_type": "kanji",
+    "srs_stage": 8,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": "2026-07-22T10:00:00.000Z",
+    "passed_at": "2026-08-10T10:00:00.000Z",
+    "burned_at": null,
+    "available_at": "2026-09-11T09:00:00.000Z",
+    "hidden": false
+   }
+  },
+  {
+   "id": 102,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 3,
+    "subject_type": "kanji",
+    "srs_stage": 5,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": "2026-07-22T10:00:00.000Z",
+    "passed_at": "2026-08-10T10:00:00.000Z",
+    "burned_at": null,
+    "available_at": "2026-08-25T09:00:00.000Z",
+    "hidden": false
+   }
+  },
+  {
+   "id": 103,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 4,
+    "subject_type": "vocabulary",
+    "srs_stage": 4,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": "2026-07-22T10:00:00.000Z",
+    "passed_at": null,
+    "burned_at": null,
+    "available_at": "2026-08-22T21:00:00.000Z",
+    "hidden": false
+   }
+  },
+  {
+   "id": 104,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 5,
+    "subject_type": "vocabulary",
+    "srs_stage": 2,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": "2026-07-22T10:00:00.000Z",
+    "passed_at": null,
+    "burned_at": null,
+    "available_at": "2026-08-23T09:00:00.000Z",
+    "hidden": false
+   }
+  },
+  {
+   "id": 105,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 6,
+    "subject_type": "kanji",
+    "srs_stage": 1,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": "2026-07-22T10:00:00.000Z",
+    "passed_at": null,
+    "burned_at": null,
+    "available_at": "2026-08-21T09:00:00.000Z",
+    "hidden": false
+   }
+  },
+  {
+   "id": 106,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 7,
+    "subject_type": "kana_vocabulary",
+    "srs_stage": 0,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": null,
+    "passed_at": null,
+    "burned_at": null,
+    "available_at": "2026-08-23T09:00:00.000Z",
+    "hidden": false
+   }
+  },
+  {
+   "id": 107,
+   "object": "assignment",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 8,
+    "subject_type": "kanji",
+    "srs_stage": 3,
+    "unlocked_at": "2026-07-21T10:00:00.000Z",
+    "started_at": "2026-07-22T10:00:00.000Z",
+    "passed_at": null,
+    "burned_at": null,
+    "available_at": "2026-08-24T09:00:00.000Z",
+    "hidden": false
+   }
+  }
+ ],
+ "review_statistics": [
+  {
+   "id": 200,
+   "object": "review_statistic",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 1,
+    "subject_type": "radical",
+    "meaning_correct": 20,
+    "meaning_incorrect": 0,
+    "reading_correct": 0,
+    "reading_incorrect": 0,
+    "meaning_current_streak": 20,
+    "reading_current_streak": 0,
+    "meaning_max_streak": 20,
+    "reading_max_streak": 0,
+    "percentage_correct": 100,
+    "hidden": false
+   }
+  },
+  {
+   "id": 201,
+   "object": "review_statistic",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 2,
+    "subject_type": "kanji",
+    "meaning_correct": 18,
+    "meaning_incorrect": 1,
+    "reading_correct": 17,
+    "reading_incorrect": 2,
+    "meaning_current_streak": 10,
+    "reading_current_streak": 8,
+    "meaning_max_streak": 10,
+    "reading_max_streak": 8,
+    "percentage_correct": 92,
+    "hidden": false
+   }
+  },
+  {
+   "id": 202,
+   "object": "review_statistic",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 3,
+    "subject_type": "kanji",
+    "meaning_correct": 9,
+    "meaning_incorrect": 4,
+    "reading_correct": 8,
+    "reading_incorrect": 5,
+    "meaning_current_streak": 1,
+    "reading_current_streak": 2,
+    "meaning_max_streak": 1,
+    "reading_max_streak": 2,
+    "percentage_correct": 65,
+    "hidden": false
+   }
+  },
+  {
+   "id": 203,
+   "object": "review_statistic",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 4,
+    "subject_type": "vocabulary",
+    "meaning_correct": 6,
+    "meaning_incorrect": 7,
+    "reading_correct": 5,
+    "reading_incorrect": 8,
+    "meaning_current_streak": 1,
+    "reading_current_streak": 0,
+    "meaning_max_streak": 1,
+    "reading_max_streak": 0,
+    "percentage_correct": 42,
+    "hidden": false
+   }
+  },
+  {
+   "id": 204,
+   "object": "review_statistic",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 5,
+    "subject_type": "vocabulary",
+    "meaning_correct": 3,
+    "meaning_incorrect": 1,
+    "reading_correct": 2,
+    "reading_incorrect": 2,
+    "meaning_current_streak": 2,
+    "reading_current_streak": 1,
+    "meaning_max_streak": 2,
+    "reading_max_streak": 1,
+    "percentage_correct": 63,
+    "hidden": false
+   }
+  },
+  {
+   "id": 205,
+   "object": "review_statistic",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 6,
+    "subject_type": "kanji",
+    "meaning_correct": 1,
+    "meaning_incorrect": 3,
+    "reading_correct": 1,
+    "reading_incorrect": 3,
+    "meaning_current_streak": 0,
+    "reading_current_streak": 0,
+    "meaning_max_streak": 0,
+    "reading_max_streak": 0,
+    "percentage_correct": 25,
+    "hidden": false
+   }
+  },
+  {
+   "id": 206,
+   "object": "review_statistic",
+   "data_updated_at": "2026-08-18T10:00:00.000Z",
+   "data": {
+    "subject_id": 8,
+    "subject_type": "kanji",
+    "meaning_correct": 4,
+    "meaning_incorrect": 2,
+    "reading_correct": 4,
+    "reading_incorrect": 2,
+    "meaning_current_streak": 3,
+    "reading_current_streak": 3,
+    "meaning_max_streak": 3,
+    "reading_max_streak": 3,
+    "percentage_correct": 67,
+    "hidden": false
+   }
+  }
+ ],
+ "level_progressions": [
+  {
+   "id": 300,
+   "object": "level_progression",
+   "data_updated_at": "2026-08-20T10:00:00.000Z",
+   "data": {
+    "level": 1,
+    "unlocked_at": "2026-07-11T10:00:00.000Z",
+    "started_at": "2026-07-11T10:00:00.000Z",
+    "passed_at": "2026-07-18T10:00:00.000Z",
+    "completed_at": null,
+    "abandoned_at": null
+   }
+  },
+  {
+   "id": 301,
+   "object": "level_progression",
+   "data_updated_at": "2026-08-20T10:00:00.000Z",
+   "data": {
+    "level": 2,
+    "unlocked_at": "2026-07-18T10:00:00.000Z",
+    "started_at": "2026-07-18T10:00:00.000Z",
+    "passed_at": "2026-07-25T10:00:00.000Z",
+    "completed_at": null,
+    "abandoned_at": null
+   }
+  },
+  {
+   "id": 302,
+   "object": "level_progression",
+   "data_updated_at": "2026-08-20T10:00:00.000Z",
+   "data": {
+    "level": 3,
+    "unlocked_at": "2026-07-25T10:00:00.000Z",
+    "started_at": "2026-07-25T10:00:00.000Z",
+    "passed_at": null,
+    "completed_at": null,
+    "abandoned_at": "2026-08-08T10:00:00.000Z"
+   }
+  },
+  {
+   "id": 303,
+   "object": "level_progression",
+   "data_updated_at": "2026-08-20T10:00:00.000Z",
+   "data": {
+    "level": 3,
+    "unlocked_at": "2026-08-08T10:00:00.000Z",
+    "started_at": "2026-08-08T10:00:00.000Z",
+    "passed_at": "2026-08-15T10:00:00.000Z",
+    "completed_at": null,
+    "abandoned_at": null
+   }
+  },
+  {
+   "id": 304,
+   "object": "level_progression",
+   "data_updated_at": "2026-08-20T10:00:00.000Z",
+   "data": {
+    "level": 4,
+    "unlocked_at": "2026-08-15T10:00:00.000Z",
+    "started_at": "2026-08-15T10:00:00.000Z",
+    "passed_at": null,
+    "completed_at": null,
+    "abandoned_at": null
+   }
+  }
+ ]
+}
