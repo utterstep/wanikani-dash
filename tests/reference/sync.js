@@ -16,6 +16,13 @@ import { slimUser } from './auth.js';
 
 const byKey = (rows, k) => new Map(rows.map((r) => [r[k], r]));
 
+/** Slim progressions, minus the ones already stored identically (every write costs an index write too). */
+async function progressionsChanged(raw, store) {
+  const rows = raw.map(slimProgression);
+  const prev = await store.getMany('level_progressions', rows.map((p) => p.id));
+  return rows.filter((p, i) => JSON.stringify(prev[i]) !== JSON.stringify(p));
+}
+
 /**
  * @param {import('../public/js/api.js').WkApi} api
  * @param {object} store
@@ -30,9 +37,9 @@ export async function sync(api, store, { now = new Date() } = {}) {
   // 1. user (level, vacation)
   await store.setMeta('user', slimUser(await api.getOne('/user')));
 
-  // 2. level progressions (small: refetch all)
-  const progressions = await api.getAll('/level_progressions');
-  await store.putAll('level_progressions', progressions.map(slimProgression), syncId);
+  // 2. level progressions (small: refetch all; only changed rows are written)
+  const progressions = progressionsChanged(await api.getAll('/level_progressions'), store);
+  await store.putAll('level_progressions', await progressions, syncId);
 
   // 3. assignments + review statistics (incremental)
   const asgParams = cursors.assignments ? { updated_after: cursors.assignments } : {};
@@ -48,11 +55,12 @@ export async function sync(api, store, { now = new Date() } = {}) {
   const { events } = diffAssignments(prevAsg, asg, nowIso);
   const reviewEvent = diffStats(prevStats, stats, nowIso);
 
-  // 5. persist: events first, then snapshot, then cursors (a crash never loses events)
+  // 5. persist: events first, then snapshot (changed rows only), then cursors (a crash never loses events)
   const srsEvents = await store.addAll('srs_events', events, syncId);
   if (reviewEvent) await store.addAll('review_events', [reviewEvent], syncId);
-  await store.putAll('assignments', asg, syncId);
-  await store.putAll('review_statistics', stats, syncId);
+  const changed = (rows, prevById, key) => rows.filter((r) => JSON.stringify(prevById.get(r[key])) !== JSON.stringify(r));
+  await store.putAll('assignments', changed(asg, prevAsg, 'subject_id'), syncId);
+  await store.putAll('review_statistics', changed(stats, prevStats, 'subject_id'), syncId);
   await store.addAll('syncs', [{ at: nowIso, srs_events: srsEvents, reviews: reviewEvent?.reviews ?? 0 }], syncId);
 
   // Cursor = max data_updated_at seen (safer than "now" against clock skew). Keep the old cursor if nothing came back.
