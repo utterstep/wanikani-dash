@@ -240,6 +240,12 @@ fn bootstrap_throttle_poll_and_incremental_state() {
         4,
         "only changed assignments"
     );
+    assert_eq!(
+        r.body["level_progressions"].as_array().unwrap().len(),
+        0,
+        "unchanged progressions are not rewritten"
+    );
+    let r = call(&acc, "GET", "/state", Some("0"), None, "test-token", NOW_B);
     assert_eq!(r.body["level_progressions"].as_array().unwrap().len(), 5);
 
     let r = call(&acc, "GET", "/state", Some("99"), None, "test-token", NOW_B);

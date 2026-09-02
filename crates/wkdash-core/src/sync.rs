@@ -40,6 +40,30 @@ fn key_of_stat(s: &ReviewStat) -> i64 {
     s.data.subject_id.as_u64() as i64
 }
 
+/// Upsert only rows whose stored JSON differs. Every write also updates the `sync_id` index and
+/// counts against the daily row-write budget, and unchanged rows would only make clients re-pull
+/// what they already have. `prev` is the stored row for the same key, if any.
+fn put_changed<T: Serialize>(
+    store: &impl Store,
+    table: Table,
+    rows: &[T],
+    key: impl Fn(&T) -> i64,
+    prev: impl Fn(&T) -> Option<String>,
+    sync_id: u64,
+) -> Result<usize, StoreError> {
+    let changed = rows
+        .iter()
+        .map(|r| Ok((key(r), serde_json::to_string(r)?)))
+        .collect::<Result<Vec<_>, serde_json::Error>>()?
+        .into_iter()
+        .zip(rows)
+        .filter(|((_, json), r)| prev(r).as_deref() != Some(json.as_str()))
+        .map(|((key, json), _)| crate::store::KeyedRow { key, json })
+        .collect::<Vec<_>>();
+    store.put_all(table, &changed, sync_id)?;
+    Ok(changed.len())
+}
+
 fn latest(rows: &[Envelope<impl Sized>], prev: Option<Timestamp>) -> Option<Timestamp> {
     rows.iter()
         .filter_map(|r| r.data_updated_at.clone())
@@ -67,10 +91,21 @@ pub async fn sync<T: Transport, S: Store>(
         .into_iter()
         .map(|e| e.slim())
         .collect();
-    store.put_typed(
+    let prev_prog: HashMap<i64, String> = store
+        .get_many(
+            Table::LevelProgressions,
+            &progressions.iter().map(|p| p.id as i64).collect::<Vec<_>>(),
+        )?
+        .into_iter()
+        .zip(&progressions)
+        .filter_map(|(json, p)| Some((p.id as i64, json?)))
+        .collect();
+    put_changed(
+        store,
         Table::LevelProgressions,
         &progressions,
         |p| p.id as i64,
+        |p| prev_prog.get(&(p.id as i64)).cloned(),
         sync_id,
     )?;
 
@@ -133,8 +168,27 @@ pub async fn sync<T: Transport, S: Store>(
             sync_id,
         )?;
     }
-    store.put_typed(Table::Assignments, &asg, key_of_assignment, sync_id)?;
-    store.put_typed(Table::ReviewStatistics, &stats, key_of_stat, sync_id)?;
+    let stored = |v: &Option<&Assignment>| v.and_then(|a| serde_json::to_string(a).ok());
+    put_changed(
+        store,
+        Table::Assignments,
+        &asg,
+        key_of_assignment,
+        |a| stored(&prev_asg.get(&a.data.subject_id)),
+        sync_id,
+    )?;
+    put_changed(
+        store,
+        Table::ReviewStatistics,
+        &stats,
+        key_of_stat,
+        |s| {
+            prev_stats
+                .get(&s.data.subject_id)
+                .and_then(|p| serde_json::to_string(p).ok())
+        },
+        sync_id,
+    )?;
     let reviews = review_event.as_ref().map_or(0, |e| e.reviews);
     store.add_typed(
         Table::Syncs,
