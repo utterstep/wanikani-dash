@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>WaniKani Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">鰐</span>
+    <span class="title">WaniKani<br><small>dashboard</small></span>
+  </div>
+  <div class="who">
+    <span id="level-badge" class="badge"></span>
+    <span id="username" class="muted"></span>
+    <span id="last-sync" class="muted small"></span>
+  </div>
+  <div class="actions">
+    <button id="refresh" class="btn" title="Refresh">↻</button>
+    <button id="theme-toggle" class="btn" title="Toggle theme">◐</button>
+    <button id="open-settings" class="btn" title="Settings">⚙</button>
+  </div>
+</header>
+
+<div id="progress" class="progress" hidden></div>
+<div id="status" class="status" hidden></div>
+
+<main id="dashboard" hidden>
+  <section id="actions" class="cta-row" hidden></section>
+  <section id="cards" class="cards"></section>
+
+  <section class="panel">
+    <h2>SRS distribution</h2>
+    <div id="srs-chart" class="chart-wrap"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Days per level</h2>
+    <div id="levels-chart" class="chart-wrap"></div>
+    <p id="levels-note" class="note"></p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Reviews per day</h2>
+      <label class="select">Last
+        <select id="days-select">
+          <option value="30">30 days</option>
+          <option value="60" selected>60 days</option>
+          <option value="90">90 days</option>
+          <option value="180">180 days</option>
+          <option value="365">365 days</option>
+        </select>
+      </label>
+    </div>
+    <div id="reviews-chart" class="chart-wrap"></div>
+    <h2>SRS promotions ▲ / demotions ▼</h2>
+    <div id="srs-moves-chart" class="chart-wrap"></div>
+    <p id="history-note" class="note"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Upcoming reviews</h2>
+    <div id="upcoming-chart" class="chart-wrap"></div>
+    <p id="upcoming-note" class="note"></p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Kanken coverage</h2>
+      <label class="select">漢検
+        <select id="kanken-select"></select>
+      </label>
+    </div>
+    <p id="kanken-sub" class="note"></p>
+    <div id="kanken-summary"></div>
+    <div id="kanken-heat"></div>
+    <div id="kanken-legend"></div>
+    <p id="kanken-note" class="note"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Accuracy</h2>
+    <div id="accuracy"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Leeches</h2>
+    <p class="note">Score = wrong answers ÷ current streak<sup>1.5</sup>; items ≥ 1.0, worst first. Highlighted cell is the weaker side.</p>
+    <div id="leeches"></div>
+  </section>
+</main>
+
+<dialog id="settings">
+  <form id="settings-form" method="dialog">
+    <h2>Settings</h2>
+    <p id="settings-msg" class="note"></p>
+    <label>WaniKani API token
+      <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+    </label>
+    <p class="note">A read-only <a href="https://www.wanikani.com/settings/personal_access_tokens" target="_blank" rel="noopener">personal access token</a>. Kept in this browser and on this site’s server, which polls WaniKani for you every 15 minutes so your history grows on every device. Any valid token for the same WaniKani account opens the same dashboard.</p>
+    <div class="dialog-actions">
+      <button type="submit" class="btn primary">Save</button>
+      <button type="button" id="export" class="btn">Export history</button>
+      <button type="button" id="forget-local" class="btn">Forget on this device</button>
+      <button type="button" id="delete-server" class="btn danger">Delete account &amp; history on server</button>
+    </div>
+  </form>
+</dialog>
+
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

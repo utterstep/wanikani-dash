@@ -1,5 +1,5 @@
 import { describe, it, assertEqual, assert } from './harness.js';
-import { diffAssignments, diffStats, slimAssignment, slimStat, slimSubject } from '../js/diff.js';
+import { diffAssignments, diffStats, slimAssignment, slimStat, slimSubject } from '../public/js/diff.js';
 import { fixtures } from './fixtures/synthetic.js';
 
 const byId = (rows) => new Map(rows.map((r) => [r.subject_id, r]));

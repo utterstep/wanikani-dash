@@ -1,7 +1,7 @@
 import { describe, it, assert, assertEqual } from './harness.js';
-import { JOYO_BY_GRADE, JINMEIYO, GRADE_KEYS, gradeOf, isJoyo } from '../js/kanji-grades.js';
-import { KANKEN_LEVELS, KANJI_STATES, kankenLevel, selectableLevel, kankenCoverage, stateOfStage, kanjiByCharacter, nonJoyoWaniKani } from '../js/kanken.js';
-import { slimAssignment, slimSubject } from '../js/diff.js';
+import { JOYO_BY_GRADE, JINMEIYO, GRADE_KEYS, gradeOf, isJoyo } from '../public/js/kanji-grades.js';
+import { KANKEN_LEVELS, KANJI_STATES, kankenLevel, selectableLevel, kankenCoverage, stateOfStage, kanjiByCharacter, nonJoyoWaniKani } from '../public/js/kanken.js';
+import { slimAssignment, slimSubject } from '../public/js/diff.js';
 import { fixtures } from './fixtures/synthetic.js';
 
 const fa = fixtures('a');

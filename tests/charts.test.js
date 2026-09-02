@@ -1,5 +1,5 @@
 import { describe, it, assertEqual, assert } from './harness.js';
-import { niceTicks, columnChart, divergingChart, stackedBars, legend } from '../js/charts.js';
+import { niceTicks, columnChart, divergingChart, stackedBars, legend } from '../public/js/charts.js';
 
 const parse = (svg) => new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement;
 

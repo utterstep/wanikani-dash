@@ -104,7 +104,7 @@ function renderDaily(model, now) {
   const since = model.historySince ? fmtDate(model.historySince) : null;
   const sinceKey = model.historySince ? dateKey(model.historySince) : '9999';
   const isGap = (d) => !d.synced && d.date > sinceKey;
-  $('history-note').textContent = since ? `Review history is collected locally since ${since}. Days without a sync are shaded; their reviews land on the next sync day.` : '';
+  $('history-note').textContent = since ? `Review history is collected on the server every 15 minutes since ${since}. Shaded days had no sync; their reviews land on the next sync day.` : '';
 
   $('reviews-chart').innerHTML = columnChart(series.map((d) => ({
     label: shortDay(d.date), value: d.reviews, cls: 'reviews', gap: isGap(d),

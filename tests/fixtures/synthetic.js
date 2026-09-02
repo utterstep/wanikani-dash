@@ -37,7 +37,7 @@ const PROGRESSIONS = [
 
 export function fixtures(scenario = 'a') {
   const now = scenario === 'b' ? NOW_B : NOW_A;
-  const user = { object: 'user', data_updated_at: ISO(now), data: { username: 'testuser', level: 4, started_at: ISO(NOW_A - 40 * DAY), current_vacation_started_at: null, subscription: { active: true, type: 'lifetime', max_level_granted: 60 } } };
+  const user = { object: 'user', data_updated_at: ISO(now), data: { id: '5a6a5234-a392-4a87-8f3f-33342afe8a42', username: 'testuser', level: 4, started_at: ISO(NOW_A - 40 * DAY), current_vacation_started_at: null, subscription: { active: true, type: 'lifetime', max_level_granted: 60 } } };
 
   const subjects = SUBJECTS.map((s) => ({ id: s.id, object: s.object, data_updated_at: ISO(NOW_A - 100 * DAY), data: { ...s, document_url: `https://www.wanikani.com/${s.object}/${s.slug}`, hidden_at: null, readings: s.readings ?? [] } }));
 

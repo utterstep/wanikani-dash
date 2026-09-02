@@ -67,6 +67,15 @@ export class Db {
     await done;
   }
 
+  /** Upsert rows with explicit keys into an autoIncrement store (server-assigned ids). */
+  async putAllKeyed(store, rows, keyOf) {
+    if (!rows.length) return;
+    const { t, done } = this.tx(store, 'readwrite');
+    const os = t.objectStore(store);
+    for (const r of rows) os.put(r, keyOf(r));
+    await done;
+  }
+
   async addAll(store, rows) {
     if (!rows.length) return;
     const { t, done } = this.tx(store, 'readwrite');

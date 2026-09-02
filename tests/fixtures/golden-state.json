@@ -1,0 +1,352 @@
+{
+  "account": {
+    "history_since": "2026-08-20T10:00:00.000Z",
+    "last_sync": "2026-08-22T09:00:00.000Z",
+    "status": "active",
+    "user": {
+      "current_vacation_started_at": null,
+      "id": "5a6a5234-a392-4a87-8f3f-33342afe8a42",
+      "level": 4,
+      "started_at": "2026-07-11T10:00:00.000Z",
+      "subscription": {
+        "active": true,
+        "max_level_granted": 60,
+        "type": "lifetime"
+      },
+      "username": "testuser"
+    },
+    "version": 2
+  },
+  "assignments": [
+    {
+      "available_at": null,
+      "burned_at": "2026-08-19T10:00:00.000Z",
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "passed_at": "2026-08-10T10:00:00.000Z",
+      "srs_stage": 9,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 1,
+      "subject_type": "radical",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    },
+    {
+      "available_at": "2026-09-11T09:00:00.000Z",
+      "burned_at": null,
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "passed_at": "2026-08-10T10:00:00.000Z",
+      "srs_stage": 8,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 2,
+      "subject_type": "kanji",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    },
+    {
+      "available_at": "2026-08-25T09:00:00.000Z",
+      "burned_at": null,
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "passed_at": "2026-08-10T10:00:00.000Z",
+      "srs_stage": 6,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 3,
+      "subject_type": "kanji",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    },
+    {
+      "available_at": "2026-08-22T21:00:00.000Z",
+      "burned_at": null,
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "passed_at": null,
+      "srs_stage": 3,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 4,
+      "subject_type": "vocabulary",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    },
+    {
+      "available_at": "2026-08-23T09:00:00.000Z",
+      "burned_at": null,
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "passed_at": null,
+      "srs_stage": 3,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 5,
+      "subject_type": "vocabulary",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    },
+    {
+      "available_at": "2026-08-21T09:00:00.000Z",
+      "burned_at": null,
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "passed_at": null,
+      "srs_stage": 1,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 6,
+      "subject_type": "kanji",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    },
+    {
+      "available_at": "2026-08-23T09:00:00.000Z",
+      "burned_at": null,
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "passed_at": null,
+      "srs_stage": 1,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 7,
+      "subject_type": "kana_vocabulary",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    },
+    {
+      "available_at": "2026-08-24T09:00:00.000Z",
+      "burned_at": null,
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "passed_at": null,
+      "srs_stage": 3,
+      "started_at": "2026-07-22T10:00:00.000Z",
+      "subject_id": 8,
+      "subject_type": "kanji",
+      "unlocked_at": "2026-07-21T10:00:00.000Z"
+    }
+  ],
+  "level_progressions": [
+    {
+      "abandoned_at": null,
+      "completed_at": null,
+      "id": 300,
+      "level": 1,
+      "passed_at": "2026-07-18T10:00:00.000Z",
+      "started_at": "2026-07-11T10:00:00.000Z",
+      "unlocked_at": "2026-07-11T10:00:00.000Z"
+    },
+    {
+      "abandoned_at": null,
+      "completed_at": null,
+      "id": 301,
+      "level": 2,
+      "passed_at": "2026-07-25T10:00:00.000Z",
+      "started_at": "2026-07-18T10:00:00.000Z",
+      "unlocked_at": "2026-07-18T10:00:00.000Z"
+    },
+    {
+      "abandoned_at": "2026-08-08T10:00:00.000Z",
+      "completed_at": null,
+      "id": 302,
+      "level": 3,
+      "passed_at": null,
+      "started_at": "2026-07-25T10:00:00.000Z",
+      "unlocked_at": "2026-07-25T10:00:00.000Z"
+    },
+    {
+      "abandoned_at": null,
+      "completed_at": null,
+      "id": 303,
+      "level": 3,
+      "passed_at": "2026-08-15T10:00:00.000Z",
+      "started_at": "2026-08-08T10:00:00.000Z",
+      "unlocked_at": "2026-08-08T10:00:00.000Z"
+    },
+    {
+      "abandoned_at": null,
+      "completed_at": null,
+      "id": 304,
+      "level": 4,
+      "passed_at": null,
+      "started_at": "2026-08-15T10:00:00.000Z",
+      "unlocked_at": "2026-08-15T10:00:00.000Z"
+    }
+  ],
+  "review_events": [
+    {
+      "at": "2026-08-22T09:00:00.000Z",
+      "id": 1,
+      "items": 3,
+      "meaning_correct_d": 2,
+      "meaning_incorrect_d": 1,
+      "reading_correct_d": 2,
+      "reading_incorrect_d": 1,
+      "reviews": 3
+    }
+  ],
+  "review_statistics": [
+    {
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 20,
+      "meaning_current_streak": 20,
+      "meaning_incorrect": 0,
+      "meaning_max_streak": 20,
+      "percentage_correct": 100,
+      "reading_correct": 0,
+      "reading_current_streak": 0,
+      "reading_incorrect": 0,
+      "reading_max_streak": 0,
+      "subject_id": 1,
+      "subject_type": "radical"
+    },
+    {
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 18,
+      "meaning_current_streak": 10,
+      "meaning_incorrect": 1,
+      "meaning_max_streak": 10,
+      "percentage_correct": 92,
+      "reading_correct": 17,
+      "reading_current_streak": 8,
+      "reading_incorrect": 2,
+      "reading_max_streak": 8,
+      "subject_id": 2,
+      "subject_type": "kanji"
+    },
+    {
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 10,
+      "meaning_current_streak": 2,
+      "meaning_incorrect": 4,
+      "meaning_max_streak": 2,
+      "percentage_correct": 68,
+      "reading_correct": 9,
+      "reading_current_streak": 3,
+      "reading_incorrect": 5,
+      "reading_max_streak": 3,
+      "subject_id": 3,
+      "subject_type": "kanji"
+    },
+    {
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 6,
+      "meaning_current_streak": 0,
+      "meaning_incorrect": 8,
+      "meaning_max_streak": 0,
+      "percentage_correct": 39,
+      "reading_correct": 5,
+      "reading_current_streak": 0,
+      "reading_incorrect": 9,
+      "reading_max_streak": 0,
+      "subject_id": 4,
+      "subject_type": "vocabulary"
+    },
+    {
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 4,
+      "meaning_current_streak": 3,
+      "meaning_incorrect": 1,
+      "meaning_max_streak": 3,
+      "percentage_correct": 70,
+      "reading_correct": 3,
+      "reading_current_streak": 2,
+      "reading_incorrect": 2,
+      "reading_max_streak": 2,
+      "subject_id": 5,
+      "subject_type": "vocabulary"
+    },
+    {
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 1,
+      "meaning_current_streak": 0,
+      "meaning_incorrect": 3,
+      "meaning_max_streak": 0,
+      "percentage_correct": 25,
+      "reading_correct": 1,
+      "reading_current_streak": 0,
+      "reading_incorrect": 3,
+      "reading_max_streak": 0,
+      "subject_id": 6,
+      "subject_type": "kanji"
+    },
+    {
+      "data_updated_at": "2026-08-21T13:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 1,
+      "meaning_current_streak": 1,
+      "meaning_incorrect": 0,
+      "meaning_max_streak": 1,
+      "percentage_correct": 100,
+      "reading_correct": 0,
+      "reading_current_streak": 0,
+      "reading_incorrect": 0,
+      "reading_max_streak": 0,
+      "subject_id": 7,
+      "subject_type": "kana_vocabulary"
+    },
+    {
+      "data_updated_at": "2026-08-18T10:00:00.000Z",
+      "hidden": false,
+      "meaning_correct": 4,
+      "meaning_current_streak": 3,
+      "meaning_incorrect": 2,
+      "meaning_max_streak": 3,
+      "percentage_correct": 67,
+      "reading_correct": 4,
+      "reading_current_streak": 3,
+      "reading_incorrect": 2,
+      "reading_max_streak": 3,
+      "subject_id": 8,
+      "subject_type": "kanji"
+    }
+  ],
+  "since": 0,
+  "srs_events": [
+    {
+      "at": "2026-08-21T13:00:00.000Z",
+      "from": 5,
+      "id": 1,
+      "seen_at": "2026-08-22T09:00:00.000Z",
+      "subject_id": 3,
+      "subject_type": "kanji",
+      "to": 6
+    },
+    {
+      "at": "2026-08-21T13:00:00.000Z",
+      "from": 4,
+      "id": 2,
+      "seen_at": "2026-08-22T09:00:00.000Z",
+      "subject_id": 4,
+      "subject_type": "vocabulary",
+      "to": 3
+    },
+    {
+      "at": "2026-08-21T13:00:00.000Z",
+      "from": 2,
+      "id": 3,
+      "seen_at": "2026-08-22T09:00:00.000Z",
+      "subject_id": 5,
+      "subject_type": "vocabulary",
+      "to": 3
+    },
+    {
+      "at": "2026-08-21T13:00:00.000Z",
+      "from": 0,
+      "id": 4,
+      "seen_at": "2026-08-22T09:00:00.000Z",
+      "subject_id": 7,
+      "subject_type": "kana_vocabulary",
+      "to": 1
+    }
+  ],
+  "syncs": [
+    {
+      "at": "2026-08-20T10:00:00.000Z",
+      "id": 1,
+      "reviews": 0,
+      "srs_events": 0
+    },
+    {
+      "at": "2026-08-22T09:00:00.000Z",
+      "id": 2,
+      "reviews": 3,
+      "srs_events": 4
+    }
+  ]
+}
