@@ -27,12 +27,17 @@
     <p class="note">Upload it and the new site carries on from where this browser left off. Skip it and history on the new site starts today.</p>
     <div class="dialog-actions">
       <button id="upload" class="btn primary">Upload history, then continue</button>
-      <a id="go" class="btn">Continue without uploading</a>
+      <button id="go" class="btn">Continue without uploading</button>
     </div>
+    <p class="note">Either button also copies your API token to the clipboard, so you can paste it on the new site.</p>
     <p id="err" class="note"></p>
   </section>
   <section class="panel" id="plain" hidden>
-    <p>The dashboard moved to <a id="go2" href="https://wkdash.utterstep.app/">wkdash.utterstep.app</a>.</p>
+    <p>The dashboard moved to <a id="link" href="https://wkdash.utterstep.app/">wkdash.utterstep.app</a>.</p>
+    <div class="dialog-actions">
+      <button id="go2" class="btn primary">Copy API token and continue</button>
+    </div>
+    <p class="note">The new site needs the token once; this copies it to the clipboard first.</p>
   </section>
 </main>
 <script type="module">
@@ -47,15 +52,26 @@
   params.delete('legacy'); params.delete('mock');
   const qs = params.toString();
   const target = `${NEW}/${qs ? `?${qs}` : ''}${location.hash}`;
-  const leave = () => { if (MOCK) { $('plain').hidden = false; $('plain').dataset.done = '1'; } else location.replace(target); };
+  const key = localStorage.getItem('wk_api_key');
+  // Clipboard writes only work inside a click, so every exit from this page is a button.
+  const copyToken = async () => {
+    if (!key) return;
+    try { await navigator.clipboard.writeText(key); $('plain').dataset.copied = '1'; } catch { /* denied or unsupported: paste by hand */ }
+  };
+  const leave = async () => {
+    await copyToken();
+    if (MOCK) { $('plain').hidden = false; $('plain').dataset.done = '1'; } else location.replace(target);
+  };
 
   let serverFetch;
   if (MOCK) ({ server: serverFetch } = await (await import('./tests/mock-api.js')).installMock(params.get('mock') ?? 'a'));
-  for (const a of [$('go'), $('go2')]) a.href = target;
+  $('link').href = target;
+  $('go').addEventListener('click', leave);
+  $('go2').addEventListener('click', leave);
 
-  const key = localStorage.getItem('wk_api_key');
   const db = await openDb();
-  if (!key || !(await hasLocalHistory(db))) { leave(); }
+  if (!key) { location.replace(target); }
+  else if (!(await hasLocalHistory(db))) { $('plain').hidden = false; }
   else {
     const since = new Date(await db.getMeta('history_since')).toLocaleDateString();
     $('msg').textContent = `This browser holds review history since ${since} (${await db.count('syncs')} syncs) that only exists here.`;

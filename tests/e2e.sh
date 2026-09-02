@@ -69,25 +69,31 @@ agent-browser eval 'localStorage.setItem("wk_api_key","nope"); location.reload()
 agent-browser wait --fn 'document.getElementById("settings").open' >/dev/null
 agent-browser eval 'document.getElementById("settings-msg").textContent' | grep -q "rejected" || { echo "FAIL: auth error"; fail=1; }
 
-echo "== e2e: old-origin page with no history just forwards"
+echo "== e2e: old-origin page with no history offers copy-token-and-continue"
 reset_all
 agent-browser open "$B/index.html?mock=a" >/dev/null
-agent-browser wait --fn 'document.getElementById("plain").dataset.done === "1"' >/dev/null
-agent-browser eval 'document.getElementById("go2").href' | grep -q "https://wkdash.utterstep.app/" || { echo "FAIL: redirect target"; fail=1; }
+agent-browser wait --fn '!document.getElementById("plain").hidden' >/dev/null
+agent-browser eval 'document.getElementById("link").href' | grep -q "https://wkdash.utterstep.app/" || { echo "FAIL: redirect target"; fail=1; }
 agent-browser eval 'document.getElementById("migrate").hidden' | grep -q true || { echo "FAIL: migrate offered without history"; fail=1; }
+agent-browser eval 'navigator.clipboard.writeText = (t) => { window.__copied = t; return Promise.resolve(); }; 1' >/dev/null
+agent-browser click '#go2' >/dev/null
+agent-browser wait --fn 'document.getElementById("plain").dataset.done === "1"' >/dev/null
+agent-browser eval 'window.__copied' | grep -q '"test-token"' || { echo "FAIL: token not copied: $(agent-browser eval 'window.__copied')"; fail=1; }
 
 echo "== e2e: old-origin page uploads pre-server history, new site continues from it"
 reset_all
 agent-browser open "$B/index.html?mock=b&legacy=1&foo=1#bar" >/dev/null
 agent-browser wait --fn '!document.getElementById("migrate").hidden' >/dev/null
 agent-browser eval 'document.getElementById("msg").textContent' | grep -q "history since" || { echo "FAIL: migrate message"; fail=1; }
-agent-browser eval 'document.getElementById("go").href' | grep -q "https://wkdash.utterstep.app/?foo=1#bar" || { echo "FAIL: query/hash not carried: $(agent-browser eval 'document.getElementById("go").href')"; fail=1; }
+agent-browser eval 'document.getElementById("link").href' | grep -q "https://wkdash.utterstep.app/?foo=1#bar" || { echo "FAIL: query/hash not carried: $(agent-browser eval 'document.getElementById("link").href')"; fail=1; }
+agent-browser eval 'navigator.clipboard.writeText = (t) => { window.__copied = t; return Promise.resolve(); }; 1' >/dev/null
 agent-browser click '#upload' >/dev/null
 agent-browser wait --fn 'document.getElementById("plain").dataset.done === "1"' >/dev/null
 agent-browser eval 'document.getElementById("err").textContent' | grep -q "Uploaded" || { echo "FAIL: upload status: $(agent-browser eval 'document.getElementById("err").textContent')"; fail=1; }
+agent-browser eval 'window.__copied' | grep -q '"test-token"' || { echo "FAIL: token not copied after upload"; fail=1; }
 agent-browser eval 'Object.values(JSON.parse(localStorage.__mock_server))[0].meta.find(([k]) => k === "history_since")[1]' | grep -q '2026-08-15' || { echo "FAIL: server did not adopt legacy history"; fail=1; }
 agent-browser open "$B/index.html?mock=b&legacy=1" >/dev/null
-agent-browser wait --fn 'document.getElementById("plain").dataset.done === "1"' >/dev/null
+agent-browser wait --fn '!document.getElementById("plain").hidden' >/dev/null
 agent-browser eval 'document.getElementById("migrate").hidden' | grep -q true || { echo "FAIL: migrate offered twice"; fail=1; }
 agent-browser open "$APP?mock=b" >/dev/null
 agent-browser wait --fn '!document.getElementById("dashboard").hidden && /SRS changes/.test(document.getElementById("status").textContent)' >/dev/null
