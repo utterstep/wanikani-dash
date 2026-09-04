@@ -47,10 +47,10 @@ agent-browser eval 'document.getElementById("level").hidden' | grep -q false || 
 agent-browser eval 'document.querySelectorAll("#level-select option").length' | grep -q 4 || { echo "FAIL: level options"; fail=1; }
 agent-browser eval 'document.getElementById("level-select").value' | grep -q '"4"' || { echo "FAIL: level defaults to current"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#level-summary .mini").length >= 3' | grep -q true || { echo "FAIL: level summary cards"; fail=1; }
-agent-browser eval 'document.querySelectorAll("#level-grid .heat").length' | grep -q 1 || { echo "FAIL: level 4 has one kanji in the fixture"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#level-grid details .heat").length' | grep -q 1 || { echo "FAIL: level 4 has one kanji in the fixture"; fail=1; }
 agent-browser eval 'document.querySelector("#level-chart svg.chart") !== null' | grep -q true || { echo "FAIL: level timeline"; fail=1; }
 agent-browser eval 'document.querySelector("#cards .card:nth-child(3) .card-sub").textContent' | grep -q "earliest" || { echo "FAIL: next-level card lacks the ETA"; fail=1; }
-agent-browser eval '(() => { const s = document.getElementById("level-select"); s.value = "3"; s.dispatchEvent(new Event("change")); return document.querySelectorAll("#level-grid .heat").length; })()' | grep -q 3 || { echo "FAIL: level 3 items"; fail=1; }
+agent-browser eval '(() => { const s = document.getElementById("level-select"); s.value = "3"; s.dispatchEvent(new Event("change")); return document.querySelectorAll("#level-grid details .heat").length; })()' | grep -q 3 || { echo "FAIL: level 3 items"; fail=1; }
 agent-browser eval 'document.querySelector("#level-summary").textContent' | grep -q "Level passed" || { echo "FAIL: past level shows pass date"; fail=1; }
 agent-browser screenshot tests/screenshot-level.png >/dev/null
 agent-browser eval '(() => { const s = document.getElementById("level-select"); s.value = "4"; s.dispatchEvent(new Event("change")); return 1; })()' >/dev/null

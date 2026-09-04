@@ -7,7 +7,7 @@ import {
 } from './stats.js';
 import { KANKEN_LEVELS, KANJI_STATES, kankenCoverage, selectableLevel, nonJoyoWaniKani } from './kanken.js';
 import { gradeOf } from './kanji-grades.js';
-import { levelItems, levelUpEta, measureLags, progressionFor, levelTimeline, HOUR } from './level.js';
+import { levelItems, levelUpEta, measureLags, progressionFor, levelTimeline, LEVEL_STATES, HOUR } from './level.js';
 
 const $ = (id) => document.getElementById(id);
 const widthOf = (id) => Math.max(320, Math.floor($(id).clientWidth || $(id).parentElement.clientWidth || 640));
@@ -206,26 +206,34 @@ function renderLevel(model, now, { userLevel, current, analyse }) {
   }
   $('level-summary').innerHTML = `<div class="mini-cards">${minis.join('')}</div>`;
 
-  // One collapsible section per type, strip in the summary, cells below.
-  const open = matchMedia('(max-width: 600px)').matches ? '' : ' open';
+  // One section per type: the strip is the progress bar, the items unfold on click.
+  const wasOpen = new Set([...grid.querySelectorAll('details[open]')].map((d) => d.dataset.type));
   const radicalName = (id) => { const s = model.subjectsById.get(id); return s ? s.characters ?? s.meaning : '?'; };
-  $('level-grid').innerHTML = ['radical', 'kanji', 'vocabulary'].map((type) => {
+  grid.innerHTML = ['radical', 'kanji', 'vocabulary'].map((type) => {
     const list = items.groups[type];
     if (!list.length) return '';
     const passed = list.filter((i) => i.passed).length;
     const due = list.filter((i) => i.dueNow).length;
+    const locked = items.counts[type].locked;
+    const facts = [`${passed} of ${list.length} passed`];
+    if (due) facts.push(`${due} due now`);
+    if (locked) facts.push(`${locked} locked`);
+    const mark = type === 'kanji' && !passedRun
+      ? `<span class="strip-mark hit" style="left:${(items.kanji.needed / items.kanji.total) * 100}%" data-tip="${esc(`${items.kanji.needed} of ${items.kanji.total} kanji (90%) pass the level`)}"></span>` : '';
     return `
-    <details class="heat-grade"${open}>
+    <details class="heat-grade level-group" data-type="${type}"${wasOpen.has(type) ? ' open' : ''}>
       <summary>
         <div class="heat-head">
           <span class="heat-title">${TYPE_TITLE[type]}</span>
-          <span class="heat-sub">${list.length} · ${passed} passed${due ? ` · ${due} due now` : ''}</span>
+          <span class="heat-sub">${facts.join(' · ')}</span>
         </div>
-        ${strip(items.counts[type], list.length, TYPE_TITLE[type])}
+        <div class="strip-wrap">${strip(items.counts[type], list.length, TYPE_TITLE[type])}${mark}</div>
       </summary>
-      <div class="heat-grid">${list.map((it) => levelCell(it, eta.earliest.times.get(it.id), bottleneck.has(it.id), radicalName)).join('')}</div>
+      <div class="${type === 'vocabulary' ? 'heat-row' : 'heat-grid'}">${list.map((it) => levelCell(it, eta.earliest.times.get(it.id), bottleneck.has(it.id), radicalName)).join('')}</div>
     </details>`;
-  }).join('');
+  }).join('') + `<ul class="legend level-legend">${
+    LEVEL_STATES.map((s) => `<li><span class="heat st-${s.key}">字</span>${esc(s.label)}</li>`).join('')
+  }<li><span class="heat st-apprentice due">字</span>review available</li><li><span class="heat st-lesson bottleneck">字</span>sets the level-up date</li></ul>`;
 
   // Cumulative kanji passed since the level opened, previous level for comparison.
   const tl = levelTimeline(level, model.progressions, model.subjects, model.assignmentsById, now);
@@ -253,9 +261,9 @@ function levelCell(it, path, isBottleneck, radicalName) {
   else if (it.available_at && it.srs_stage > 0 && it.srs_stage < 9) lines.push(`next review ${fmtDateTime(it.available_at)}`);
   if (path?.locked && path.gateRadical) lines.push(`unlocks after ${radicalName(path.gateRadical)}`);
   if (isBottleneck) lines.push('sets the earliest level-up date');
-  const cls = `heat hit st-${it.state}${it.dueNow ? ' due' : ''}${isBottleneck ? ' bottleneck' : ''}`;
+  const cls = `heat hit st-${it.state}${it.type === 'vocabulary' ? ' wide' : ''}${it.dueNow ? ' due' : ''}${isBottleneck ? ' bottleneck' : ''}`;
   const body = it.characters ? esc(it.characters)
-    : it.image ? `<img class="radical-img" src="${esc(it.image)}" alt="${esc(it.meaning)}" loading="lazy">`
+    : it.image ? `<img class="radical-img" src="${esc(it.image)}" alt="${esc(it.meaning)}">`
       : `<span class="heat-text">${esc(it.meaning)}</span>`;
   const attrs = `class="${cls}" data-tip="${esc(lines.join('\n'))}"`;
   return it.url ? `<a ${attrs} href="${esc(it.url)}" target="_blank" rel="noopener">${body}</a>` : `<span ${attrs}>${body}</span>`;
