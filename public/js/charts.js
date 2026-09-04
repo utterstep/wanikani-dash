@@ -184,9 +184,10 @@ export function stepChart(series, opts = {}) {
     for (const p of ser.points.slice(1)) d += ` H${x(p.x)} V${y(p.y)}`;
     d += ` H${x(Math.max(ser.endX ?? 0, ser.points.at(-1).x))}`;
     s += `<path class="line ${cls}" d="${d}"/>`;
+    // Dots only on the main series; the reference line stays quiet but keeps its tooltips.
     for (const p of ser.points) {
       if (!p.y) continue;
-      s += `<g class="hit" data-tip="${esc(p.tip ?? `${fmt(p.x)}d: ${fmt(p.y)}`)}"><circle class="hitbox" cx="${x(p.x)}" cy="${y(p.y)}" r="8"/><circle class="dot ${cls}" cx="${x(p.x)}" cy="${y(p.y)}" r="3"/></g>`;
+      s += `<g class="hit" data-tip="${esc(p.tip ?? `${fmt(p.x)}d: ${fmt(p.y)}`)}"><circle class="hitbox" cx="${x(p.x)}" cy="${y(p.y)}" r="8"/>${ser.muted ? '' : `<circle class="dot ${cls}" cx="${x(p.x)}" cy="${y(p.y)}" r="2.5"/>`}</g>`;
     }
   }
   return s + '</svg>';
