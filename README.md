@@ -5,7 +5,7 @@ A no-build stats dashboard for [WaniKani](https://www.wanikani.com), served from
 Cloudflare Worker polls WaniKani for you every 15 minutes, so the review history keeps growing
 and every device shows the same dashboard.
 
-**Charts:** SRS distribution · days per level (1–60) with median and projections · reviews per day · SRS promotions/demotions per day · upcoming reviews · Kanken coverage heat map · accuracy by type · leeches.
+**Charts:** level progress (item grid, level-up ETA, kanji-passed timeline) · SRS distribution · days per level (1–60) with median and projections · reviews per day · SRS promotions/demotions per day · upcoming reviews · Kanken coverage heat map · accuracy by type · leeches.
 
 ## How it works
 
@@ -41,6 +41,31 @@ The server is Rust (`workers-rs`): `crates/wkdash-core` holds all logic behind `
 `Transport` and `Runtime` traits and is tested natively with `cargo nextest`;
 `crates/wkdash-worker` is the thin Cloudflare glue (SQLite store, alarms, Cache API, assets).
 The JSON contract of `/api` is described in `docs/plans/cloud-sync.md`.
+
+## Level progress
+
+Every radical, kanji and vocabulary item of a level as a cell coloured by SRS stage (any
+level up to the current one can be picked), how many kanji are passed against the 90% the
+level-up needs, and two dates:
+
+- **Earliest level-up** assumes you do the pending lessons now and every review the moment it
+  becomes available. It follows WaniKani's rules: a kanji unlocks once all of its radicals are
+  passed, each review lands the item at the top of the hour after 4 h → 8 h → 23 h → 47 h (2 h →
+  4 h → 8 h → 23 h on levels 1–2), and the level passes with the k-th fastest kanji where k is
+  what is still missing from the 90%. The kanji that sets that date is ringed in the grid;
+  items with a review available now are outlined in blue.
+- **At your pace** stretches the same chain by how late your lessons (median wait after
+  unlock) and reviews (median actual time from lesson to Guru over the theoretical minimum)
+  were on the last three completed levels.
+
+The chart underneath is the cumulative number of kanji passed since the level unlocked, with
+the previous level as a faint reference. Passing follows WaniKani's definition (`passed_at`),
+so a kanji that later dropped below Guru still counts; after a reset only passes from the
+current run of the level do.
+
+Image-only radicals are drawn from WaniKani's SVGs, which is the reason the subjects cache
+now also keeps `component_subject_ids` and the image URL: an existing browser re-downloads
+the subjects once (progress bar) the first time it opens this version.
 
 ## Kanken coverage
 

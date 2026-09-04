@@ -32,6 +32,7 @@ async function injectLegacyHistory() {
   await db.addAll('syncs', [{ at: iso(NOW_A - 5 * DAY), srs_events: 1, reviews: 10 }, { at: iso(NOW_A), srs_events: 0, reviews: 0 }]);
   await db.setMeta('user', { username: 'testuser', level: 4 }); // legacy: no id
   await db.setMeta('cursors', { subjects: iso(NOW_A - 100 * DAY), assignments: iso(NOW_A - 2 * DAY), review_statistics: iso(NOW_A - 2 * DAY) });
+  await db.setMeta('subjects_schema', 2);
   await db.setMeta('history_since', iso(NOW_A - 5 * DAY));
   await db.setMeta('last_sync', iso(NOW_A));
   db.close();

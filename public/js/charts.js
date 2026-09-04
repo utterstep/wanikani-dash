@@ -149,6 +149,49 @@ export function stackedBars(rows, opts = {}) {
   return s + '</svg>';
 }
 
+/**
+ * Step lines (cumulative counts over days). Each series is drawn as a staircase from its first
+ * point to `endX`, with a dot per point.
+ * @param {{cls:string, points:{x:number,y:number,tip?:string}[], endX?:number, muted?:boolean}[]} series
+ * @param {{title:string, width?:number, height?:number, threshold?:{value:number,label:string}}} opts
+ */
+export function stepChart(series, opts = {}) {
+  const H = opts.height ?? 200, padL = 36, padR = 12, padT = 12, padB = 22;
+  const W = opts.width ?? 640;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const xs = series.flatMap((s) => [s.endX ?? 0, ...s.points.map((p) => p.x)]);
+  const ys = series.flatMap((s) => s.points.map((p) => p.y));
+  const xMax = Math.max(1, ...xs);
+  const xTicks = niceTicks(xMax, 5, { integer: true });
+  const xTop = xTicks[xTicks.length - 1] || 1;
+  const yTicks = niceTicks(Math.max(0, ...ys, opts.threshold?.value ?? 0), 4, { integer: true });
+  const yTop = yTicks[yTicks.length - 1] || 1;
+  const x = (v) => padL + (v / xTop) * plotW;
+  const y = (v) => padT + plotH - (v / yTop) * plotH;
+
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.title)}">`;
+  for (const t of yTicks) s += `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}"/><text class="tick" x="${padL - 6}" y="${y(t) + 3}" text-anchor="end">${fmt(t)}</text>`;
+  for (const t of xTicks) s += `<text class="tick" x="${x(t)}" y="${H - 6}" text-anchor="middle">${fmt(t)}d</text>`;
+  if (opts.threshold) {
+    const ry = y(opts.threshold.value);
+    s += `<line class="ref" x1="${padL}" x2="${W - padR}" y1="${ry}" y2="${ry}"/><text class="ref-label" x="${W - padR}" y="${ry - 4}" text-anchor="end">${esc(opts.threshold.label)}</text>`;
+  }
+  // Muted series first so the main one is drawn on top.
+  for (const ser of [...series].sort((a, b) => (b.muted ? 1 : 0) - (a.muted ? 1 : 0))) {
+    if (!ser.points.length) continue;
+    const cls = `${ser.cls ?? ''} ${ser.muted ? 'muted' : ''}`;
+    let d = `M${x(ser.points[0].x)},${y(ser.points[0].y)}`;
+    for (const p of ser.points.slice(1)) d += ` H${x(p.x)} V${y(p.y)}`;
+    d += ` H${x(Math.max(ser.endX ?? 0, ser.points.at(-1).x))}`;
+    s += `<path class="line ${cls}" d="${d}"/>`;
+    for (const p of ser.points) {
+      if (!p.y) continue;
+      s += `<g class="hit" data-tip="${esc(p.tip ?? `${fmt(p.x)}d: ${fmt(p.y)}`)}"><circle class="hitbox" cx="${x(p.x)}" cy="${y(p.y)}" r="8"/><circle class="dot ${cls}" cx="${x(p.x)}" cy="${y(p.y)}" r="3"/></g>`;
+    }
+  }
+  return s + '</svg>';
+}
+
 /** Legend HTML for a set of classes. */
 export function legend(items) {
   return `<ul class="legend">${items.map((i) => `<li><span class="swatch ${i.cls}"></span>${esc(i.name)}</li>`).join('')}</ul>`;

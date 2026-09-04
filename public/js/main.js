@@ -173,6 +173,8 @@ function wireUi() {
     localStorage.setItem(KANKEN_KEY, ev.target.value);
     if (model) renderAll(model);
   });
+  // The chosen level lives in the <select> itself; it goes back to the current level on reload.
+  $('level-select').addEventListener('change', () => { if (model) renderAll(model); });
 }
 
 /** Drop everything account-specific but keep the (global) subjects cache. */
