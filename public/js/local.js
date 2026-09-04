@@ -3,13 +3,20 @@
 
 import { slimSubject } from './diff.js';
 
+/** Bump when slimSubject gains a field: the cache is rebuilt from scratch once. 2 = components + image. */
+export const SUBJECTS_SCHEMA = 2;
+
 /**
  * @param {import('./api.js').WkApi} api
  * @param {import('./db.js').Db} db
  */
 export async function refreshLocal(api, db, { now = new Date() } = {}) {
   const nowIso = now.toISOString();
-  const cursors = (await db.getMeta('cursors')) ?? {};
+  let cursors = (await db.getMeta('cursors')) ?? {};
+  if ((await db.getMeta('subjects_schema')) !== SUBJECTS_SCHEMA) {
+    await db.clear('subjects');
+    cursors = { ...cursors, subjects: undefined };
+  }
 
   try {
     const summary = await api.getOne('/summary');
@@ -29,4 +36,5 @@ export async function refreshLocal(api, db, { now = new Date() } = {}) {
   if (subjects.length) await db.putAll('subjects', subjects.map(slimSubject));
   const maxUpd = subjects.reduce((m, r) => (r.data_updated_at > m ? r.data_updated_at : m), cursors.subjects ?? '');
   await db.setMeta('cursors', { ...cursors, subjects: maxUpd || nowIso });
+  await db.setMeta('subjects_schema', SUBJECTS_SCHEMA);
 }

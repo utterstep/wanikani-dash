@@ -54,7 +54,16 @@ export function slimSubject(r) {
     reading: primaryReading?.reading ?? null,
     document_url: d.document_url,
     hidden_at: d.hidden_at,
+    // Radicals that gate a kanji (level view: when does a locked kanji unlock).
+    components: r.object === 'kanji' ? d.component_subject_ids ?? [] : null,
+    // Image-only radicals have no characters; keep the SVG so the level grid can draw them.
+    image: r.object === 'radical' && d.characters == null ? svgImage(d.character_images) : null,
   };
+}
+
+function svgImage(images) {
+  const svgs = (images || []).filter((i) => i.content_type === 'image/svg+xml');
+  return (svgs.find((i) => i.metadata?.inline_styles) ?? svgs[0])?.url ?? null;
 }
 
 export function slimProgression(r) {

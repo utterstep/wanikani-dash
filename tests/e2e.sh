@@ -37,10 +37,23 @@ agent-browser wait --fn '/First sync done/.test(document.getElementById("status"
 status | grep -q "First sync done" || { echo "FAIL: no first-sync status: $(status)"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#cards .card").length' | grep -q 5 || { echo "FAIL: cards"; fail=1; }
 agent-browser eval 'document.getElementById("actions").hidden' | grep -q false || { echo "FAIL: actions row"; fail=1; }
-agent-browser eval 'document.querySelectorAll("svg.chart").length' | grep -q 5 || { echo "FAIL: charts"; fail=1; }
+agent-browser eval 'document.querySelectorAll("svg.chart").length' | grep -q 6 || { echo "FAIL: charts"; fail=1; }
 agent-browser eval 'document.querySelector("#leeches table") !== null' | grep -q true || { echo "FAIL: leeches"; fail=1; }
 agent-browser eval 'document.getElementById("history-note").textContent' | grep -q "on the server" || { echo "FAIL: history note"; fail=1; }
 agent-browser screenshot tests/screenshot-a.png >/dev/null
+
+echo "== e2e: level progress"
+agent-browser eval 'document.getElementById("level").hidden' | grep -q false || { echo "FAIL: level panel hidden"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#level-select option").length' | grep -q 4 || { echo "FAIL: level options"; fail=1; }
+agent-browser eval 'document.getElementById("level-select").value' | grep -q '"4"' || { echo "FAIL: level defaults to current"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#level-summary .mini").length >= 3' | grep -q true || { echo "FAIL: level summary cards"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#level-grid .heat").length' | grep -q 1 || { echo "FAIL: level 4 has one kanji in the fixture"; fail=1; }
+agent-browser eval 'document.querySelector("#level-chart svg.chart") !== null' | grep -q true || { echo "FAIL: level timeline"; fail=1; }
+agent-browser eval 'document.querySelector("#cards .card:nth-child(3) .card-sub").textContent' | grep -q "earliest" || { echo "FAIL: next-level card lacks the ETA"; fail=1; }
+agent-browser eval '(() => { const s = document.getElementById("level-select"); s.value = "3"; s.dispatchEvent(new Event("change")); return document.querySelectorAll("#level-grid .heat").length; })()' | grep -q 3 || { echo "FAIL: level 3 items"; fail=1; }
+agent-browser eval 'document.querySelector("#level-summary").textContent' | grep -q "Level passed" || { echo "FAIL: past level shows pass date"; fail=1; }
+agent-browser screenshot tests/screenshot-level.png >/dev/null
+agent-browser eval '(() => { const s = document.getElementById("level-select"); s.value = "4"; s.dispatchEvent(new Event("change")); return 1; })()' >/dev/null
 
 echo "== e2e: kanken heat map"
 agent-browser eval 'document.querySelectorAll("#kanken-select option").length' | grep -q 11 || { echo "FAIL: kanken levels"; fail=1; }

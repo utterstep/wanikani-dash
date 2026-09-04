@@ -120,6 +120,14 @@ main { display: grid; gap: 14px; margin-top: 8px; }
 .chart .hit:hover .mark, .chart .hit:active .mark { filter: brightness(1.15); }
 .chart .mark { fill: var(--ink-3); }
 .chart .mark.muted { opacity: .35; }
+.chart .line { fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-linejoin: round; }
+.chart .line.muted { opacity: .4; }
+.chart .dot { fill: var(--ink-3); }
+.chart .dot.muted { opacity: .4; }
+.chart .line.level-current, .chart .dot.level-current { stroke: var(--level-current); }
+.chart .dot.level-current { fill: var(--level-current); }
+.chart .line.level { stroke: var(--level); }
+.chart .dot.level { fill: var(--level); }
 .mark.reviews { fill: var(--reviews); }
 .mark.level { fill: var(--level); }
 .mark.level-current { fill: var(--level-current); }
@@ -181,6 +189,27 @@ main { display: grid; gap: 14px; margin-top: 8px; }
 @media (max-width: 600px) {
   .heat-grid { grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); }
   .heat { font-size: 13px; }
+}
+
+/* Level progress */
+#level-grid .heat-grid { grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 3px; }
+#level-grid .heat { font-size: 16px; }
+#level-grid .heat-grade:first-child { margin-top: 6px; }
+#level-chart { margin-top: 18px; }
+.heat.due { outline: 2px solid var(--reviews); outline-offset: 0; }
+.heat.bottleneck { box-shadow: inset 0 0 0 3px var(--ink); }
+.heat.due:hover, .heat.bottleneck:hover { outline: 2px solid var(--ink); }
+.heat-text { font-size: 9px; line-height: 1.05; text-align: center; overflow: hidden; padding: 0 1px; word-break: break-word; }
+.radical-img { width: 68%; height: 68%; object-fit: contain; }
+/* WaniKani's radical SVGs are drawn black; invert them on filled cells and in the dark theme. */
+.heat:is(.st-apprentice, .st-guru, .st-master, .st-enlightened, .st-burned) .radical-img { filter: invert(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .heat:is(.st-lesson, .st-locked) .radical-img { filter: invert(1); }
+}
+:root[data-theme="dark"] .heat:is(.st-lesson, .st-locked) .radical-img { filter: invert(1); }
+@media (max-width: 600px) {
+  #level-grid .heat-grid { grid-template-columns: repeat(auto-fill, minmax(28px, 1fr)); }
+  #level-grid .heat { font-size: 14px; }
 }
 
 #tooltip {

@@ -1,25 +1,29 @@
 // DOM rendering of the computed model.
 
-import { columnChart, divergingChart, stackedBars, legend } from './charts.js';
+import { columnChart, divergingChart, stackedBars, stepChart, legend } from './charts.js';
 import {
   SRS_GROUPS, TYPES, levelDurations, projection, srsDistribution, accuracyByType,
-  leeches, dailySeries, upcomingReviews, median, dateKey,
+  leeches, dailySeries, upcomingReviews, median, dateKey, daysBetween,
 } from './stats.js';
 import { KANKEN_LEVELS, KANJI_STATES, kankenCoverage, selectableLevel, nonJoyoWaniKani } from './kanken.js';
 import { gradeOf } from './kanji-grades.js';
+import { levelItems, levelUpEta, measureLags, progressionFor, levelTimeline, HOUR } from './level.js';
 
 const $ = (id) => document.getElementById(id);
 const widthOf = (id) => Math.max(320, Math.floor($(id).clientWidth || $(id).parentElement.clientWidth || 640));
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—');
+const fmtDateTime = (d) => (d ? new Date(d).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
 const fmtDays = (d) => (d == null ? '—' : d < 1 ? `${Math.round(d * 24)} h` : `${d.toFixed(1)} d`);
 const shortDay = (key) => { const [, m, d] = key.split('-'); return `${Number(d)}/${Number(m)}`; };
 const STAGE_NAME = ['Locked', 'Apprentice I', 'Apprentice II', 'Apprentice III', 'Apprentice IV', 'Guru I', 'Guru II', 'Master', 'Enlightened', 'Burned'];
 
 export function renderAll(model, { now = new Date() } = {}) {
+  const level = levelAnalysis(model, now);
   renderHeader(model);
   renderActions(model);
-  renderCards(model, now);
+  renderCards(model, now, level.current);
+  renderLevel(model, now, level);
   renderSrs(model);
   renderLevels(model, now);
   renderDaily(model, now);
@@ -51,14 +55,18 @@ function renderHeader(model) {
   $('last-sync').textContent = model.lastSync ? `synced ${new Date(model.lastSync).toLocaleString()}` : '';
 }
 
-function renderCards(model, now) {
+function renderCards(model, now, current) {
   const proj = projection(model.progressions, model.user?.level ?? 1, now);
   const today = dailySeries(model.srsEvents, model.reviewEvents, model.syncDates, 1, now)[0];
   const vacation = model.user?.current_vacation_started_at;
+  const eta = current?.eta;
+  const nextSub = eta?.earliest.at
+    ? `earliest ${fmtDate(eta.earliest.at)} · ${eta.remaining} kanji to go`
+    : proj.nextLevelIn != null ? `in ${fmtDays(proj.nextLevelIn)}` : 'need completed levels';
   $('cards').innerHTML = [
     card('Current level', model.user?.level ?? '—', vacation ? `on vacation since ${fmtDate(vacation)}` : `${fmtDays(proj.daysOnCurrent)} on this level`),
     card('Median pace', fmtDays(proj.pace), 'days per level, last 10 levels'),
-    card('Next level', proj.nextLevelAt ? fmtDate(proj.nextLevelAt) : '—', proj.nextLevelIn != null ? `in ${fmtDays(proj.nextLevelIn)}` : 'need completed levels'),
+    card('Next level', proj.nextLevelAt ? fmtDate(proj.nextLevelAt) : '—', nextSub),
     card('Level 60', proj.level60At ? fmtDate(proj.level60At) : '—', `${proj.levelsLeft} levels to go`),
     card('Reviews today', today.reviews.toLocaleString(), `▲${today.upTotal} ▼${today.downTotal} SRS moves`),
   ].join('');
@@ -120,6 +128,137 @@ function renderDaily(model, now) {
 
   const sel = $('days-select');
   if (sel && sel.value !== String(days)) sel.value = String(days);
+}
+
+/* -------------------------------------------------------- Level progress --- */
+
+const TYPE_TITLE = { radical: 'Radicals', kanji: 'Kanji', vocabulary: 'Vocabulary' };
+
+/**
+ * Items + ETA for the current level (cards) and for the level picked in the panel.
+ * Both share the measured lags; the two coincide unless the user is looking back.
+ */
+function levelAnalysis(model, now) {
+  const userLevel = model.user?.level;
+  if (!userLevel) return { userLevel: null, current: null, analyse: () => null };
+  const lags = measureLags(model.subjects, model.assignmentsById, model.progressions);
+  const analyse = (level) => {
+    const progression = progressionFor(model.progressions, level);
+    const items = levelItems(level, model.subjects, model.assignmentsById, now, progression);
+    const ctx = { subjectsById: model.subjectsById, assignmentsById: model.assignmentsById, user: model.user, now, progression };
+    return { level, progression, items, eta: levelUpEta(items, ctx, lags) };
+  };
+  return { userLevel, current: analyse(userLevel), analyse };
+}
+
+function renderLevel(model, now, { userLevel, current, analyse }) {
+  const panel = $('level');
+  if (!userLevel) { panel.hidden = true; return; }
+  panel.hidden = false;
+
+  const sel = $('level-select');
+  if (sel.dataset.max !== String(userLevel)) {
+    // Rebuilt on level-up, which also resets the choice to the new current level.
+    sel.innerHTML = Array.from({ length: userLevel }, (_, i) => userLevel - i)
+      .map((l) => `<option value="${l}">${l}${l === userLevel ? ' (current)' : ''}</option>`).join('');
+    sel.dataset.max = String(userLevel);
+    sel.value = String(userLevel);
+  }
+  const grid = $('level-grid');
+  if (!grid.dataset.wired) {
+    grid.dataset.wired = '1';
+    // Image-only radicals: fall back to the name if WaniKani's SVG does not load.
+    grid.addEventListener('error', (ev) => {
+      const img = ev.target;
+      if (!img.matches?.('img.radical-img')) return;
+      const span = document.createElement('span');
+      span.className = 'heat-text';
+      span.textContent = img.alt;
+      img.replaceWith(span);
+    }, true);
+  }
+  const level = Number(sel.value) || userLevel;
+  const { items, progression, eta } = level === userLevel ? current : analyse(level);
+  const isCurrent = level === userLevel;
+  const bottleneck = new Set(eta.earliest.bottleneck);
+
+  // Summary cards.
+  const kanjiLocked = items.counts.kanji.locked;
+  const minis = [
+    mini('Kanji passed', `${items.kanji.passed} / ${items.kanji.needed}`, `of ${items.kanji.total} kanji · 90% to level up`),
+    mini('Radicals passed', `${items.radicals.passed} / ${items.radicals.total}`, kanjiLocked ? `${kanjiLocked} kanji still locked` : 'all kanji unlocked'),
+  ];
+  const passedRun = progression?.passed_at && (!isCurrent || eta.reason === 'passed');
+  if (passedRun) {
+    minis.push(mini('Level passed', fmtDate(progression.passed_at), `in ${fmtDays(daysBetween(progression.unlocked_at, progression.passed_at))}`));
+  } else if (eta.reason === 'vacation') {
+    minis.push(mini('Level-up', 'paused', `on vacation since ${fmtDate(model.user.current_vacation_started_at)}`));
+  } else if (eta.reason === 'blocked') {
+    minis.push(mini('Earliest level-up', '—', 'waiting for locked radicals'));
+  } else if (eta.earliest.at && level < 60) {
+    const lessons = eta.earliest.lessonsNow ? ` · ${eta.earliest.lessonsNow} lessons to do now` : '';
+    minis.push(mini('Earliest level-up', fmtDateTime(eta.earliest.at), `in ${fmtDays(daysBetween(now, eta.earliest.at))} if every review is on time${lessons}`));
+    if (eta.pace.at && (eta.lags.samples.lesson || eta.lags.samples.review)) {
+      const lag = eta.lags.lessonLagMs >= HOUR ? `lessons ~${fmtDays(eta.lags.lessonLagMs / 86_400_000)} late` : 'lessons promptly';
+      const factor = eta.lags.factor > 1.05 ? `reviews ×${eta.lags.factor.toFixed(1)}` : 'reviews on time';
+      minis.push(mini('At your pace', fmtDate(eta.pace.at), `${lag}, ${factor} · last ${eta.lags.samples.review || eta.lags.samples.lesson} kanji`));
+    }
+  }
+  $('level-summary').innerHTML = `<div class="mini-cards">${minis.join('')}</div>`;
+
+  // One collapsible section per type, strip in the summary, cells below.
+  const open = matchMedia('(max-width: 600px)').matches ? '' : ' open';
+  const radicalName = (id) => { const s = model.subjectsById.get(id); return s ? s.characters ?? s.meaning : '?'; };
+  $('level-grid').innerHTML = ['radical', 'kanji', 'vocabulary'].map((type) => {
+    const list = items.groups[type];
+    if (!list.length) return '';
+    const passed = list.filter((i) => i.passed).length;
+    const due = list.filter((i) => i.dueNow).length;
+    return `
+    <details class="heat-grade"${open}>
+      <summary>
+        <div class="heat-head">
+          <span class="heat-title">${TYPE_TITLE[type]}</span>
+          <span class="heat-sub">${list.length} · ${passed} passed${due ? ` · ${due} due now` : ''}</span>
+        </div>
+        ${strip(items.counts[type], list.length, TYPE_TITLE[type])}
+      </summary>
+      <div class="heat-grid">${list.map((it) => levelCell(it, eta.earliest.times.get(it.id), bottleneck.has(it.id), radicalName)).join('')}</div>
+    </details>`;
+  }).join('');
+
+  // Cumulative kanji passed since the level opened, previous level for comparison.
+  const tl = levelTimeline(level, model.progressions, model.subjects, model.assignmentsById, now);
+  if (tl.series.length) {
+    $('level-chart').innerHTML = stepChart(tl.series.map((s) => ({
+      cls: s.key === 'current' ? 'level-current' : 'level',
+      muted: s.key !== 'current',
+      endX: s.endX,
+      points: s.points.map((p) => ({ ...p, tip: `Level ${s.level} · day ${p.x.toFixed(1)}: ${p.y} of ${s.total} kanji passed${p.characters ? `\n${p.characters}` : ''}` })),
+    })), { title: `Kanji passed on level ${level}`, height: 180, width: widthOf('level-chart'), threshold: { value: tl.threshold, label: `${tl.threshold} to level up` } });
+    const prev = tl.series.find((s) => s.key === 'previous');
+    const notes = [`Kanji passed since level ${level} unlocked on ${fmtDate(tl.series[0].unlockedAt)}${prev ? `; the faint line is level ${prev.level}` : ''}.`];
+    if (isCurrent && !passedRun) notes.push('Earliest level-up assumes lessons now and every review the moment it is available (4 h → 8 h → 23 h → 47 h to Guru, faster on levels 1–2). "At your pace" stretches that by how late your lessons and reviews were on the last three levels.');
+    $('level-note').textContent = notes.join(' ');
+  } else {
+    $('level-chart').innerHTML = '';
+    $('level-note').textContent = '';
+  }
+}
+
+function levelCell(it, path, isBottleneck, radicalName) {
+  const name = it.characters ?? it.meaning;
+  const lines = [`${name}${it.characters ? ` · ${it.meaning}` : ''}${it.reading ? ` · ${it.reading}` : ''}`, it.srs_stage == null ? 'Locked' : STAGE_NAME[it.srs_stage]];
+  if (it.dueNow) lines.push('review available now');
+  else if (it.available_at && it.srs_stage > 0 && it.srs_stage < 9) lines.push(`next review ${fmtDateTime(it.available_at)}`);
+  if (path?.locked && path.gateRadical) lines.push(`unlocks after ${radicalName(path.gateRadical)}`);
+  if (isBottleneck) lines.push('sets the earliest level-up date');
+  const cls = `heat hit st-${it.state}${it.dueNow ? ' due' : ''}${isBottleneck ? ' bottleneck' : ''}`;
+  const body = it.characters ? esc(it.characters)
+    : it.image ? `<img class="radical-img" src="${esc(it.image)}" alt="${esc(it.meaning)}" loading="lazy">`
+      : `<span class="heat-text">${esc(it.meaning)}</span>`;
+  const attrs = `class="${cls}" data-tip="${esc(lines.join('\n'))}"`;
+  return it.url ? `<a ${attrs} href="${esc(it.url)}" target="_blank" rel="noopener">${body}</a>` : `<span ${attrs}>${body}</span>`;
 }
 
 /* ---------------------------------------------------------------- Kanken --- */

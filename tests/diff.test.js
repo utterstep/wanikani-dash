@@ -70,3 +70,17 @@ describe('diffStats radicals', () => {
     assertEqual(ev.reviews, 1); assertEqual(ev.reading_correct_d, 0);
   });
 });
+
+describe('slimSubject', () => {
+  it('keeps kanji components and the SVG of image-only radicals', () => {
+    const subs = fixtures('a').subjects.map(slimSubject);
+    const by = Object.fromEntries(subs.map((s) => [s.id, s]));
+    assertEqual(by[2].components, [1]);
+    assertEqual([by[1].components, by[4].components], [null, null]);
+    assertEqual(by[1].image, null, 'radical with characters needs no image');
+    const imageOnly = slimSubject({ id: 99, object: 'radical', data: { level: 1, characters: null, slug: 'gun', meanings: [{ meaning: 'Gun', primary: true }],
+      character_images: [{ url: 'https://x/a.png', content_type: 'image/png' }, { url: 'https://x/a.svg', content_type: 'image/svg+xml', metadata: { inline_styles: false } }, { url: 'https://x/b.svg', content_type: 'image/svg+xml', metadata: { inline_styles: true } }] } });
+    assertEqual(imageOnly.image, 'https://x/b.svg');
+    assertEqual(slimSubject({ id: 98, object: 'radical', data: { level: 1, characters: null, meanings: [] } }).image, null);
+  });
+});

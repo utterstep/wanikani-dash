@@ -64,6 +64,15 @@
       "primary": true
      }
     ],
+    "character_images": [
+     {
+      "url": "https://cdn.wanikani.com/images/legacy/ground.svg",
+      "content_type": "image/svg+xml",
+      "metadata": {
+       "inline_styles": true
+      }
+     }
+    ],
     "document_url": "https://www.wanikani.com/radical/ground",
     "hidden_at": null,
     "readings": []
@@ -91,6 +100,9 @@
       "primary": true
      }
     ],
+    "component_subject_ids": [
+     1
+    ],
     "document_url": "https://www.wanikani.com/kanji/一",
     "hidden_at": null
    }
@@ -116,6 +128,9 @@
       "reading": "にん",
       "primary": true
      }
+    ],
+    "component_subject_ids": [
+     1
     ],
     "document_url": "https://www.wanikani.com/kanji/人",
     "hidden_at": null
@@ -195,6 +210,9 @@
       "primary": true
      }
     ],
+    "component_subject_ids": [
+     1
+    ],
     "document_url": "https://www.wanikani.com/kanji/日",
     "hidden_at": null
    }
@@ -241,6 +259,9 @@
       "reading": "げつ",
       "primary": true
      }
+    ],
+    "component_subject_ids": [
+     1
     ],
     "document_url": "https://www.wanikani.com/kanji/月",
     "hidden_at": null

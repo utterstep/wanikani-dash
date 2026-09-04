@@ -1,5 +1,5 @@
 import { describe, it, assertEqual, assert } from './harness.js';
-import { niceTicks, columnChart, divergingChart, stackedBars, legend } from '../public/js/charts.js';
+import { niceTicks, columnChart, divergingChart, stackedBars, stepChart, legend } from '../public/js/charts.js';
 
 const parse = (svg) => new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement;
 
@@ -47,5 +47,24 @@ describe('stackedBars + legend', () => {
     const ul = new DOMParser().parseFromString(legend([{ cls: 'a', name: 'A & B' }]), 'text/html').querySelector('ul');
     assertEqual(ul.querySelectorAll('li').length, 1);
     assertEqual(ul.textContent, 'A & B');
+  });
+});
+
+describe('stepChart', () => {
+  it('draws a staircase per series, a dot per passed item and the threshold', () => {
+    const svg = parse(stepChart([
+      { cls: 'level-current', endX: 5, points: [{ x: 0, y: 0 }, { x: 2, y: 1, tip: 'two' }, { x: 3, y: 2 }] },
+      { cls: 'level', muted: true, endX: 7, points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] },
+    ], { title: 'T', threshold: { value: 8, label: '8 to level up' } }));
+    assertEqual(svg.querySelectorAll('path.line').length, 2);
+    assertEqual(svg.querySelectorAll('.hit').length, 3);
+    assert([...svg.querySelectorAll('.hit')].some((h) => h.getAttribute('data-tip') === 'two'));
+    assertEqual(svg.querySelectorAll('.ref').length, 1);
+    assert(svg.querySelector('path.line.level-current').getAttribute('d').includes(' H'));
+    assert(svg.textContent.includes('8 to level up'));
+  });
+  it('copes with empty series', () => {
+    assertEqual(parse(stepChart([{ cls: 'x', points: [] }], { title: 'T' })).tagName, 'svg');
+    assertEqual(parse(stepChart([], { title: 'T' })).tagName, 'svg');
   });
 });
