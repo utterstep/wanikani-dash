@@ -63,6 +63,20 @@ describe('stepChart', () => {
     assert(svg.querySelector('path.line.level-current').getAttribute('d').includes(' H'));
     assert(svg.textContent.includes('8 to level up'));
   });
+  it('fills bands, dashes reference lines and can drop dots or tooltips', () => {
+    const svg = parse(stepChart([
+      { cls: 'a', dots: false, endX: 4, points: [{ x: 0, y: 1 }, { x: 2, y: 3 }] },
+      { cls: 'm', dashed: true, hits: false, points: [{ x: 0, y: 0 }, { x: 1, y: 2 }] },
+    ], { title: 'T', xLabel: (v) => `day ${v}`, bands: [{ cls: 'b', points: [{ x: 0, lo: 0, hi: 1 }, { x: 2, lo: 1, hi: 4 }, { x: 4, lo: 2, hi: 6 }] }] }));
+    assertEqual(svg.querySelectorAll('path.band.b').length, 1);
+    assert(svg.querySelector('path.band').getAttribute('d').endsWith('Z'));
+    assertEqual(svg.querySelectorAll('path.line.dashed').length, 1);
+    assertEqual(svg.querySelectorAll('.hit').length, 2);       // series a only
+    assertEqual(svg.querySelectorAll('.dot').length, 0);
+    assert(svg.textContent.includes('day 0'));
+    assert(svg.querySelector('.hit').getAttribute('data-tip').startsWith('day 0'));
+    assert(svg.textContent.includes('6'), 'y axis covers the band');
+  });
   it('copes with empty series', () => {
     assertEqual(parse(stepChart([{ cls: 'x', points: [] }], { title: 'T' })).tagName, 'svg');
     assertEqual(parse(stepChart([], { title: 'T' })).tagName, 'svg');

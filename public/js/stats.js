@@ -242,3 +242,39 @@ export function upcomingReviews(assignments, days = 7, now = new Date(), tz) {
   }
   return { overdue, days: [...out.values()] };
 }
+
+/**
+ * Apprentice items per local day over the whole journey. An item is Apprentice from its lesson
+ * (`started_at`) until it passes (`passed_at`). Trips back below Guru are only visible in the
+ * collected SRS events, so those are patched in from the events: a demotion to stages 1–4 opens
+ * a stint that closes on the item's next promotion to Guru.
+ * @param {object[]} srsEvents {subject_id, from, to, at}
+ * @returns {{date:string, count:number}[]} one row per day from the first lesson to `now`
+ */
+export function apprenticeLoad(assignments, srsEvents, now = new Date(), tz) {
+  const delta = new Map();
+  const bump = (iso, d) => { const k = dateKey(iso, tz); delta.set(k, (delta.get(k) ?? 0) + d); };
+  let first = null;
+  for (const a of assignments) {
+    if (!a.started_at || a.hidden) continue;
+    bump(a.started_at, +1);
+    if (a.passed_at) bump(a.passed_at, -1);
+    if (!first || a.started_at < first) first = a.started_at;
+  }
+  if (!first) return [];
+  const open = new Set();
+  for (const e of [...srsEvents].sort((p, q) => p.at.localeCompare(q.at))) {
+    if (e.from >= 5 && e.to >= 1 && e.to < 5 && !open.has(e.subject_id)) { open.add(e.subject_id); bump(e.at, +1); }
+    else if (e.to >= 5 && open.has(e.subject_id)) { open.delete(e.subject_id); bump(e.at, -1); }
+  }
+  const out = [];
+  const end = dateKey(new Date(now).toISOString(), tz);
+  let count = 0;
+  for (let d = new Date(`${dateKey(first, tz)}T12:00:00Z`); ; d = new Date(d.getTime() + DAY)) {
+    const key = d.toISOString().slice(0, 10);
+    count += delta.get(key) ?? 0;
+    out.push({ date: key, count });
+    if (key >= end) break;
+  }
+  return out;
+}

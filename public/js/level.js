@@ -249,23 +249,61 @@ export function levelTimeline(level, progressions, subjects, assignmentsById, no
   const seriesFor = (lvl, key) => {
     const prog = progressionFor(progressions, lvl);
     if (!prog) return null;
-    const kanji = subjects.filter((s) => s.object === 'kanji' && s.level === lvl && !s.hidden_at);
-    const passes = [];
-    for (const s of kanji) {
-      const a = assignmentsById.get(s.id);
-      if (!isUnlocked(a) || !fromRun(a, prog) || !a.passed_at || !isPassed(a, prog)) continue;
-      passes.push({ x: Math.max(0, daysBetween(prog.unlocked_at, a.passed_at)), characters: s.characters ?? s.meaning });
-    }
-    passes.sort((a, b) => a.x - b.x);
+    const { total, passes } = passDays(prog, subjects, assignmentsById);
     const points = [{ x: 0, y: 0 }, ...passes.map((p, i) => ({ x: p.x, y: i + 1, characters: p.characters }))];
     const end = Math.max(0, daysBetween(prog.unlocked_at, prog.passed_at ?? new Date(now).toISOString()));
     return {
-      key, level: lvl, total: kanji.length, needed: neededKanji(kanji.length), unlockedAt: prog.unlocked_at,
+      key, level: lvl, total, needed: neededKanji(total), unlockedAt: prog.unlocked_at,
       endX: Math.max(end, points.at(-1).x), points,
     };
   };
   const current = seriesFor(level, 'current');
-  if (!current) return { threshold: 0, series: [] };
+  if (!current) return { threshold: 0, series: [], typical: null };
   const previous = level > 1 ? seriesFor(level - 1, 'previous') : null;
-  return { threshold: current.needed, series: previous ? [current, previous] : [current] };
+  return {
+    threshold: current.needed,
+    series: previous ? [current, previous] : [current],
+    typical: typicalLevel(level, progressions, subjects, assignmentsById, current.needed),
+  };
+}
+
+/** Days after `prog.unlocked_at` at which each of that level's kanji passed, ascending. */
+function passDays(prog, subjects, assignmentsById) {
+  const kanji = subjects.filter((s) => s.object === 'kanji' && s.level === prog.level && !s.hidden_at);
+  const passes = [];
+  for (const s of kanji) {
+    const a = assignmentsById.get(s.id);
+    if (!isUnlocked(a) || !fromRun(a, prog) || !a.passed_at || !isPassed(a, prog)) continue;
+    passes.push({ x: Math.max(0, daysBetween(prog.unlocked_at, a.passed_at)), characters: s.characters ?? s.meaning });
+  }
+  passes.sort((a, b) => a.x - b.x);
+  return { total: kanji.length, passes };
+}
+
+/**
+ * How a level's kanji-passed curve compares with the user's other completed levels: the
+ * slowest-to-fastest band and the median, sampled every `step` days over up to `window` completed
+ * levels. Levels have different kanji counts, so each curve is scaled to `needed` of the level being
+ * viewed and all of them share its threshold line. Null with fewer than two levels to compare.
+ * @returns {null|{levels:number[], endX:number, band:{x:number, lo:number, hi:number}[], median:{x:number, y:number}[]}}
+ */
+export function typicalLevel(level, progressions, subjects, assignmentsById, needed, { window = 5, step = 0.25 } = {}) {
+  const done = progressions
+    .filter((p) => p.level !== level && p.passed_at && !p.abandoned_at && p.unlocked_at)
+    .sort((a, b) => a.unlocked_at.localeCompare(b.unlocked_at))
+    .slice(-window);
+  if (done.length < 2) return null;
+  const curves = done.map((p) => {
+    const { total, passes } = passDays(p, subjects, assignmentsById);
+    return { level: p.level, xs: passes.map((q) => q.x), scale: needed / (neededKanji(total) || 1), endX: Math.max(0, daysBetween(p.unlocked_at, p.passed_at)) };
+  });
+  const endX = Math.max(...curves.map((c) => c.endX));
+  const band = [], med = [];
+  for (let i = 0, x = 0; x <= endX + 1e-9; x = ++i * step) {
+    const vals = curves.map((c) => c.xs.filter((v) => v <= x).length * c.scale).sort((a, b) => a - b);
+    band.push({ x, lo: vals[0], hi: vals.at(-1) });
+    const m = median(vals);
+    if (!med.length || med.at(-1).y !== m) med.push({ x, y: m });
+  }
+  return { levels: curves.map((c) => c.level), endX, band, median: med };
 }

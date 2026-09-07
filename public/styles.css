@@ -128,6 +128,10 @@ main { display: grid; gap: 14px; margin-top: 8px; }
 .chart .dot.level-current { fill: var(--level-current); }
 .chart .line.level { stroke: var(--level); }
 .chart .dot.level { fill: var(--level); }
+.chart .line.dashed { stroke-dasharray: 5 4; stroke-width: 1.5; }
+.chart .line.typical { stroke: var(--ink-2); }
+.chart .band { fill: var(--level); opacity: .12; }
+.chart .line.apprentice { stroke: var(--apprentice); }
 .mark.reviews { fill: var(--reviews); }
 .mark.level { fill: var(--level); }
 .mark.level-current { fill: var(--level-current); }

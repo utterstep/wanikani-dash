@@ -150,17 +150,21 @@ export function stackedBars(rows, opts = {}) {
 }
 
 /**
- * Step lines (cumulative counts over days). Each series is drawn as a staircase from its first
- * point to `endX`, with a dot per point.
- * @param {{cls:string, points:{x:number,y:number,tip?:string}[], endX?:number, muted?:boolean}[]} series
- * @param {{title:string, width?:number, height?:number, threshold?:{value:number,label:string}}} opts
+ * Step lines (cumulative counts over x). Each series is drawn as a staircase from its first
+ * point to `endX`, with a dot per point unless muted or `dots: false`; `hits: false` drops the
+ * tooltips too. Bands (`{x, lo, hi}` samples) are filled behind the lines.
+ * @param {{cls:string, points:{x:number,y:number,tip?:string}[], endX?:number, muted?:boolean, dashed?:boolean, dots?:boolean, hits?:boolean}[]} series
+ * @param {{title:string, width?:number, height?:number, threshold?:{value:number,label:string},
+ *          bands?:{cls?:string, points:{x:number,lo:number,hi:number}[]}[], xLabel?:(x:number)=>string}} opts
  */
 export function stepChart(series, opts = {}) {
   const H = opts.height ?? 200, padL = 36, padR = 12, padT = 12, padB = 22;
   const W = opts.width ?? 640;
+  const bands = opts.bands ?? [];
+  const xLabel = opts.xLabel ?? ((v) => `${fmt(v)}d`);
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const xs = series.flatMap((s) => [s.endX ?? 0, ...s.points.map((p) => p.x)]);
-  const ys = series.flatMap((s) => s.points.map((p) => p.y));
+  const xs = [...series.flatMap((s) => [s.endX ?? 0, ...s.points.map((p) => p.x)]), ...bands.flatMap((b) => b.points.map((p) => p.x))];
+  const ys = [...series.flatMap((s) => s.points.map((p) => p.y)), ...bands.flatMap((b) => b.points.map((p) => p.hi))];
   const xMax = Math.max(1, ...xs);
   const xTicks = niceTicks(xMax, 5, { integer: true });
   const xTop = xTicks[xTicks.length - 1] || 1;
@@ -171,7 +175,17 @@ export function stepChart(series, opts = {}) {
 
   let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.title)}">`;
   for (const t of yTicks) s += `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}"/><text class="tick" x="${padL - 6}" y="${y(t) + 3}" text-anchor="end">${fmt(t)}</text>`;
-  for (const t of xTicks) s += `<text class="tick" x="${x(t)}" y="${H - 6}" text-anchor="middle">${fmt(t)}d</text>`;
+  for (const t of xTicks) s += `<text class="tick" x="${x(t)}" y="${H - 6}" text-anchor="middle">${esc(xLabel(t))}</text>`;
+  for (const b of bands) {
+    const pts = b.points;
+    if (pts.length < 2) continue;
+    // Forward along the upper edge, back along the lower one, both as staircases.
+    let d = `M${x(pts[0].x)},${y(pts[0].hi)}`;
+    for (const p of pts.slice(1)) d += ` H${x(p.x)} V${y(p.hi)}`;
+    d += ` V${y(pts.at(-1).lo)}`;
+    for (let i = pts.length - 2; i >= 0; i--) d += ` V${y(pts[i].lo)} H${x(pts[i].x)}`;
+    s += `<path class="band ${b.cls ?? ''}" d="${d} Z"/>`;
+  }
   if (opts.threshold) {
     const ry = y(opts.threshold.value);
     s += `<line class="ref" x1="${padL}" x2="${W - padR}" y1="${ry}" y2="${ry}"/><text class="ref-label" x="${W - padR}" y="${ry - 4}" text-anchor="end">${esc(opts.threshold.label)}</text>`;
@@ -179,15 +193,17 @@ export function stepChart(series, opts = {}) {
   // Muted series first so the main one is drawn on top.
   for (const ser of [...series].sort((a, b) => (b.muted ? 1 : 0) - (a.muted ? 1 : 0))) {
     if (!ser.points.length) continue;
-    const cls = `${ser.cls ?? ''} ${ser.muted ? 'muted' : ''}`;
+    const cls = `${ser.cls ?? ''} ${ser.muted ? 'muted' : ''} ${ser.dashed ? 'dashed' : ''}`;
     let d = `M${x(ser.points[0].x)},${y(ser.points[0].y)}`;
     for (const p of ser.points.slice(1)) d += ` H${x(p.x)} V${y(p.y)}`;
     d += ` H${x(Math.max(ser.endX ?? 0, ser.points.at(-1).x))}`;
     s += `<path class="line ${cls}" d="${d}"/>`;
-    // Dots only on the main series; the reference line stays quiet but keeps its tooltips.
+    if (ser.hits === false) continue;
+    // Dots only on the main series; a reference line stays quiet but keeps its tooltips.
+    const dots = ser.dots ?? !ser.muted;
     for (const p of ser.points) {
       if (!p.y) continue;
-      s += `<g class="hit" data-tip="${esc(p.tip ?? `${fmt(p.x)}d: ${fmt(p.y)}`)}"><circle class="hitbox" cx="${x(p.x)}" cy="${y(p.y)}" r="8"/>${ser.muted ? '' : `<circle class="dot ${cls}" cx="${x(p.x)}" cy="${y(p.y)}" r="2.5"/>`}</g>`;
+      s += `<g class="hit" data-tip="${esc(p.tip ?? `${xLabel(p.x)}: ${fmt(p.y)}`)}"><circle class="hitbox" cx="${x(p.x)}" cy="${y(p.y)}" r="8"/>${dots ? `<circle class="dot ${cls}" cx="${x(p.x)}" cy="${y(p.y)}" r="2.5"/>` : ''}</g>`;
     }
   }
   return s + '</svg>';

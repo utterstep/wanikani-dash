@@ -3,8 +3,7 @@
 import { columnChart, divergingChart, stackedBars, stepChart, legend } from './charts.js';
 import {
   SRS_GROUPS, TYPES, levelDurations, projection, srsDistribution, accuracyByType,
-  leeches, dailySeries, upcomingReviews, median, dateKey, daysBetween,
-} from './stats.js';
+  leeches, dailySeries, upcomingReviews, median, dateKey, daysBetween, apprenticeLoad } from './stats.js';
 import { KANKEN_LEVELS, KANJI_STATES, kankenCoverage, selectableLevel, nonJoyoWaniKani } from './kanken.js';
 import { gradeOf } from './kanji-grades.js';
 import { levelItems, levelUpEta, measureLags, progressionFor, levelTimeline, LEVEL_STATES, HOUR } from './level.js';
@@ -25,6 +24,7 @@ export function renderAll(model, { now = new Date() } = {}) {
   renderCards(model, now, level.current);
   renderLevel(model, now, level);
   renderSrs(model);
+  renderLoad(model, now);
   renderLevels(model, now);
   renderDaily(model, now);
   renderKanken(model);
@@ -89,6 +89,21 @@ function renderSrs(model) {
   }));
   rows.push({ label: 'Total', parts: SRS_GROUPS.map((g) => ({ cls: `srs-${g.key}`, name: g.label, value: dist.total[g.key] })) });
   $('srs-chart').innerHTML = stackedBars(rows, { title: 'SRS distribution', width: widthOf('srs-chart') }) + legend(SRS_GROUPS.map((g) => ({ cls: `srs-${g.key}`, name: g.label })));
+}
+
+function renderLoad(model, now) {
+  const days = apprenticeLoad(model.assignments, model.srsEvents, now);
+  if (days.length < 2) { $('load-chart').innerHTML = ''; $('load-note').textContent = ''; return; }
+  const start = new Date(`${days[0].date}T12:00:00Z`);
+  const long = days.length > 400;
+  const label = (i) => new Date(start.getTime() + i * 86_400_000).toLocaleDateString(undefined, long ? { month: 'short', year: '2-digit' } : { month: 'short', day: 'numeric' });
+  const LIMIT = 100;
+  $('load-chart').innerHTML = stepChart([{
+    cls: 'apprentice', dots: false, endX: days.length - 1,
+    points: days.map((d, i) => ({ x: i, y: d.count, tip: `${label(i)}: ${d.count} Apprentice` })),
+  }], { title: 'Apprentice items over time', height: 180, width: widthOf('load-chart'), xLabel: label, threshold: { value: LIMIT, label: `${LIMIT} · a common comfort limit` } });
+  const collect = model.syncDates?.length ? fmtDate([...model.syncDates].sort()[0]) : null;
+  $('load-note').textContent = `Items in Apprentice each day, from lesson to Guru. Now ${days.at(-1).count}. Demotions back to Apprentice are counted from ${collect ?? 'when collection started'}; earlier ones are not visible in the WaniKani data.`;
 }
 
 function renderLevels(model, now) {
@@ -243,14 +258,25 @@ function renderLevel(model, now, { userLevel, current, analyse }) {
   // Cumulative kanji passed since the level opened, previous level for comparison.
   const tl = levelTimeline(level, model.progressions, model.subjects, model.assignmentsById, now);
   if (tl.series.length) {
-    $('level-chart').innerHTML = stepChart(tl.series.map((s) => ({
+    // Previous level and the typical band are scaled to this level's threshold so every curve
+    // crosses the same dashed line where its level was passed.
+    const scaleOf = (s) => (s.needed ? tl.threshold / s.needed : 1);
+    const lines = tl.series.map((s) => ({
       cls: s.key === 'current' ? 'level-current' : 'level',
       muted: s.key !== 'current',
       endX: s.endX,
-      points: s.points.map((p) => ({ ...p, tip: `Level ${s.level} · day ${p.x.toFixed(1)}: ${p.y} of ${s.total} kanji passed${p.characters ? `\n${p.characters}` : ''}` })),
-    })), { title: `Kanji passed on level ${level}`, height: 180, width: widthOf('level-chart'), threshold: { value: tl.threshold, label: `${tl.threshold} to level up` } });
+      points: s.points.map((p) => ({ x: p.x, y: p.y * scaleOf(s), tip: `Level ${s.level} · day ${p.x.toFixed(1)}: ${p.y} of ${s.total} kanji passed${p.characters ? `\n${p.characters}` : ''}` })),
+    }));
+    const typ = tl.typical;
+    if (typ) lines.push({ cls: 'typical', muted: true, dashed: true, hits: false, endX: typ.endX, points: typ.median });
+    $('level-chart').innerHTML = stepChart(lines, {
+      title: `Kanji passed on level ${level}`, height: 180, width: widthOf('level-chart'),
+      threshold: { value: tl.threshold, label: `${tl.threshold} to level up` },
+      bands: typ ? [{ cls: 'typical', points: typ.band }] : [],
+    });
     const prev = tl.series.find((s) => s.key === 'previous');
-    const notes = [`Kanji passed since level ${level} unlocked on ${fmtDate(tl.series[0].unlockedAt)}${prev ? `; the faint line is level ${prev.level}` : ''}.`];
+    const levelList = (ls) => (ls.length > 2 && ls.every((l, i) => !i || l === ls[i - 1] + 1) ? `levels ${ls[0]}–${ls.at(-1)}` : `level${ls.length > 1 ? 's' : ''} ${ls.join(', ')}`);
+    const notes = [`Kanji passed since level ${level} unlocked on ${fmtDate(tl.series[0].unlockedAt)}${prev ? `; the faint line is level ${prev.level}` : ''}${typ ? `; the shaded band spans your slowest to fastest of ${levelList(typ.levels)}, dashed is the median` : ''}${prev || typ ? ', scaled to this level\'s kanji count' : ''}.`];
     if (isCurrent && !passedRun) notes.push('Earliest level-up assumes lessons now and every review the moment it is available (4 h → 8 h → 23 h → 47 h to Guru, faster on levels 1–2). "At your pace" stretches that by how late your lessons and reviews were on the last three levels.');
     $('level-note').textContent = notes.join(' ');
   } else {

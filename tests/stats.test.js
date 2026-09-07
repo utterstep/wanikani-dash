@@ -1,5 +1,5 @@
 import { describe, it, assertEqual, assertClose, assert } from './harness.js';
-import { levelDurations, projection, srsDistribution, accuracyByType, leeches, leechScore, dailySeries, upcomingReviews, median, dateKey } from '../public/js/stats.js';
+import { levelDurations, projection, srsDistribution, accuracyByType, leeches, leechScore, dailySeries, upcomingReviews, median, dateKey, apprenticeLoad } from '../public/js/stats.js';
 import { slimAssignment, slimStat, slimSubject, slimProgression } from '../public/js/diff.js';
 import { fixtures, NOW_A, NOW_B } from './fixtures/synthetic.js';
 
@@ -112,5 +112,26 @@ describe('radicals have no reading', () => {
     const st = [{ subject_id: 1, subject_type: 'radical', meaning_incorrect: 0, meaning_current_streak: 5, reading_incorrect: 9, reading_current_streak: 0 }];
     const rows = leeches(st, new Map([[1, { subject_id: 1, srs_stage: 3 }]]), new Map([[1, { id: 1, object: 'radical', reading: 'x' }]]));
     assertEqual(rows, []);
+  });
+});
+
+describe('apprenticeLoad', () => {
+  const a = (subject_id, started_at, passed_at = null, extra = {}) => ({ subject_id, started_at, passed_at, hidden: false, ...extra });
+  it('counts items between lesson and pass per day, patching demotions from the events', () => {
+    const rows = apprenticeLoad([
+      a(1, '2026-01-01T09:00:00Z', '2026-01-04T09:00:00Z'),
+      a(2, '2026-01-02T09:00:00Z'),
+      a(3, '2026-01-02T10:00:00Z', '2026-01-03T09:00:00Z'),
+      a(4, null),                                              // never started
+      a(5, '2026-01-01T12:00:00Z', '2026-01-02T12:00:00Z', { hidden: true }),
+    ], [
+      { subject_id: 1, from: 5, to: 4, at: '2026-01-05T09:00:00Z' },   // back to Apprentice
+      { subject_id: 1, from: 4, to: 5, at: '2026-01-06T09:00:00Z' },   // re-passed
+      { subject_id: 2, from: 2, to: 3, at: '2026-01-05T09:00:00Z' },   // within Apprentice: no change
+    ], new Date('2026-01-07T00:00:00Z'), 'utc');
+    assertEqual(rows.map((r) => [r.date.slice(5), r.count]), [['01-01', 1], ['01-02', 3], ['01-03', 2], ['01-04', 1], ['01-05', 2], ['01-06', 1], ['01-07', 1]]);
+  });
+  it('is empty without any lesson', () => {
+    assertEqual(apprenticeLoad([a(1, null)], [], new Date(), 'utc'), []);
   });
 });

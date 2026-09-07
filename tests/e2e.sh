@@ -37,7 +37,7 @@ agent-browser wait --fn '/First sync done/.test(document.getElementById("status"
 status | grep -q "First sync done" || { echo "FAIL: no first-sync status: $(status)"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#cards .card").length' | grep -q 5 || { echo "FAIL: cards"; fail=1; }
 agent-browser eval 'document.getElementById("actions").hidden' | grep -q false || { echo "FAIL: actions row"; fail=1; }
-agent-browser eval 'document.querySelectorAll("svg.chart").length' | grep -q 6 || { echo "FAIL: charts"; fail=1; }
+agent-browser eval 'document.querySelectorAll("svg.chart").length' | grep -q 7 || { echo "FAIL: charts"; fail=1; }
 agent-browser eval 'document.querySelector("#leeches table") !== null' | grep -q true || { echo "FAIL: leeches"; fail=1; }
 agent-browser eval 'document.getElementById("history-note").textContent' | grep -q "on the server" || { echo "FAIL: history note"; fail=1; }
 agent-browser screenshot tests/screenshot-a.png >/dev/null

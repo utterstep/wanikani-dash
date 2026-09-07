@@ -5,7 +5,7 @@ A no-build stats dashboard for [WaniKani](https://www.wanikani.com), served from
 Cloudflare Worker polls WaniKani for you every 15 minutes, so the review history keeps growing
 and every device shows the same dashboard.
 
-**Charts:** level progress (item grid, level-up ETA, kanji-passed timeline) · SRS distribution · days per level (1–60) with median and projections · reviews per day · SRS promotions/demotions per day · upcoming reviews · Kanken coverage heat map · accuracy by type · leeches.
+**Charts:** level progress (item grid, level-up ETA, kanji-passed timeline against your previous and typical levels) · SRS distribution · Apprentice load over time · days per level (1–60) with median and projections · reviews per day · SRS promotions/demotions per day · upcoming reviews · Kanken coverage heat map · accuracy by type · leeches.
 
 ## How it works
 
@@ -60,13 +60,22 @@ level-up needs, and two dates:
   with the earliest one underneath.
 
 The chart underneath is the cumulative number of kanji passed since the level unlocked, with
-the previous level as a faint reference. Passing follows WaniKani's definition (`passed_at`),
+the previous level as a faint line and a shaded band from your slowest to your fastest of the
+last five completed levels (dashed: their median). Other levels have other kanji counts, so
+they are scaled to this level's threshold before drawing. Passing follows WaniKani's definition (`passed_at`),
 so a kanji that later dropped below Guru still counts; after a reset only passes from the
 current run of the level do.
 
 Image-only radicals are drawn from WaniKani's SVGs, which is the reason the subjects cache
 now also keeps `component_subject_ids` and the image URL: an existing browser re-downloads
 the subjects once (progress bar) the first time it opens this version.
+
+## Apprentice load
+
+Items in Apprentice on each day since your first lesson, reconstructed from `started_at` and
+`passed_at`, with a dashed line at 100, the limit many people keep their Apprentice pile under.
+WaniKani only records when an item first passed, so trips back down to Apprentice are patched
+in from the SRS events the server collects, and are invisible before collection started.
 
 ## Kanken coverage
 

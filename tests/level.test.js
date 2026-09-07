@@ -1,7 +1,7 @@
 import { describe, it, assert, assertEqual, assertClose } from './harness.js';
 import {
   HOUR, LADDERS, ladderFor, floorHour, neededKanji, progressionFor, isPassed, levelItems, afterStage,
-  passTimes, measureLags, levelUpEta, levelTimeline,
+  passTimes, measureLags, levelUpEta, levelTimeline, typicalLevel,
 } from '../public/js/level.js';
 import { slimProgression } from '../public/js/diff.js';
 import { fixtures, levelFixture, NOW_A } from './fixtures/synthetic.js';
@@ -118,6 +118,20 @@ describe('level: lags and timeline', () => {
     assertEqual(prev.points.length, 2); // 42 only; 43 is from before the run
     assertClose(prev.points[1].x, (8 + 164) / 24);
     assertEqual(prev.endX, 14);
-    assertEqual(levelTimeline(9, F.progressions, F.subjects, F.assignmentsById, NOW), { threshold: 0, series: [] });
+    assertEqual(levelTimeline(9, F.progressions, F.subjects, F.assignmentsById, NOW), { threshold: 0, series: [], typical: null });
+  });
+  it('bands the other completed levels, scaled to this level\'s threshold', () => {
+    const typ = levelTimeline(4, F.progressions, F.subjects, F.assignmentsById, NOW).typical;
+    assertEqual(typ.levels, [1, 2, 3]);           // the abandoned level-4 run and the live one are left out
+    assertEqual(typ.endX, 14);
+    assertEqual(typ.band.length, 14 / 0.25 + 1);
+    assertEqual(typ.band[0], { x: 0, lo: 0, hi: 0 });
+    // Levels 2 and 3 each need 2 kanji → scale 8/2; level 1 has no kanji in the fixture and stays at 0.
+    assertEqual(typ.band.at(-1), { x: 14, lo: 0, hi: 8 });
+    assertEqual(typ.median.at(-1).y, 4);
+    assert(typ.median.every((p, i) => !i || p.y > typ.median[i - 1].y), 'median keeps only the steps');
+    assert(typ.band.every((p) => p.lo <= p.hi));
+    assertEqual(typicalLevel(4, F.progressions.slice(0, 1), F.subjects, F.assignmentsById, 8), null);
+    assertEqual(typicalLevel(4, F.progressions, F.subjects, F.assignmentsById, 8, { window: 2 }).levels, [2, 3]);
   });
 });
