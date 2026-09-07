@@ -72,7 +72,7 @@ agent-browser eval 'localStorage.removeItem("wk_kanken"); 1' >/dev/null
 echo "== e2e: reopening later pulls what the server collected (scenario b)"
 agent-browser open "$APP?mock=b" >/dev/null
 agent-browser wait --fn '!document.getElementById("dashboard").hidden && /SRS changes/.test(document.getElementById("status").textContent)' >/dev/null
-status | grep -q "+3 reviews, 4 SRS changes" || { echo "FAIL: second sync status: $(status)"; fail=1; }
+status | grep -q "+3 reviews, 1 lesson, 3 SRS changes" || { echo "FAIL: second sync status: $(status)"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#actions a.cta").length' | grep -q 2 || { echo "FAIL: lesson/review buttons"; fail=1; }
 agent-browser eval 'Object.values(JSON.parse(localStorage.__mock_server))[0].meta.find(([k]) => k === "version")[1]' | grep -q '^2$' || { echo "FAIL: server state not persisted at version 2"; fail=1; }
 agent-browser screenshot tests/screenshot-b.png >/dev/null
@@ -110,7 +110,7 @@ agent-browser wait --fn '!document.getElementById("plain").hidden' >/dev/null
 agent-browser eval 'document.getElementById("migrate").hidden' | grep -q true || { echo "FAIL: migrate offered twice"; fail=1; }
 agent-browser open "$APP?mock=b" >/dev/null
 agent-browser wait --fn '!document.getElementById("dashboard").hidden && /SRS changes/.test(document.getElementById("status").textContent)' >/dev/null
-status | grep -q "+3 reviews, 4 SRS changes" || { echo "FAIL: post-migration sync status: $(status)"; fail=1; }
+status | grep -q "+3 reviews, 1 lesson, 3 SRS changes" || { echo "FAIL: post-migration sync status: $(status)"; fail=1; }
 agent-browser eval 'document.getElementById("history-note").textContent' | grep -q "Aug 15, 2026" || { echo "FAIL: migrated history_since not kept: $(agent-browser eval 'document.getElementById("history-note").textContent')"; fail=1; }
 
 echo "== e2e: old-origin page refuses to upload over an existing server account"

@@ -88,12 +88,19 @@ async function refresh({ keepStatus = false } = {}) {
     setProgress(null);
     model = await loadModel(db);
     renderAll(model);
-    // What's new: the sync we just triggered, or else whatever the server collected since this browser last looked.
-    const pulled = { srsEvents: st.srs_events.length, reviews: st.review_events.reduce((n, e) => n + e.reviews, 0) };
-    const delta = r.ran ? r : since > 0 && st.since > 0 ? pulled : null;
+    // What's new since this browser last looked. The events we just pulled cover the sync we
+    // triggered too, so they are the one source; lessons (stage 0 → 1) are split out because they
+    // change an SRS stage without producing a review.
+    const lessons = st.srs_events.filter((e) => e.from === 0 && e.to > 0).length;
+    const pulled = { reviews: st.review_events.reduce((n, e) => n + e.reviews, 0), lessons, srsEvents: st.srs_events.length - lessons };
+    // A browser that pulled the whole history (since 0) only reports the sync it triggered; its
+    // events are the ones stamped with that sync's time.
+    const lastSync = st.syncs?.at(-1);
+    const ranLessons = r.ran && lastSync ? st.srs_events.filter((e) => e.seen_at === lastSync.at && e.from === 0 && e.to > 0).length : 0;
+    const delta = since > 0 && st.since > 0 ? pulled : r.ran ? { reviews: r.reviews, lessons: ranLessons, srsEvents: r.srsEvents - ranLessons } : null;
     if (st.account.status === 'auth_failed') openSettings('WaniKani rejected the token stored on the server. Paste a fresh one to resume collection.');
     else if (r.ran && r.firstRun) setStatus('First sync done. Review history starts today and grows every 15 minutes on the server.', 'info');
-    else if (delta && (delta.reviews || delta.srsEvents)) setStatus(`+${delta.reviews} reviews, ${delta.srsEvents} SRS changes since last sync.`, 'info');
+    else if (delta && (delta.reviews || delta.lessons || delta.srsEvents)) setStatus(`${whatsNew(delta)} since last sync.`, 'info');
     else setStatus('');
   } catch (e) {
     handleError(e);
@@ -193,3 +200,12 @@ async function wipeLocal() {
 }
 
 boot().catch((e) => { console.error(e); setStatus(`Failed to start: ${e.message}`, 'error'); });
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+function whatsNew({ reviews, lessons, srsEvents }) {
+  const parts = [];
+  if (reviews) parts.push(`+${plural(reviews, 'review')}`);
+  if (lessons) parts.push(plural(lessons, 'lesson'));
+  if (srsEvents) parts.push(plural(srsEvents, 'SRS change'));
+  return parts.join(', ');
+}
