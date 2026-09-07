@@ -278,6 +278,7 @@ function renderLevel(model, now, { userLevel, current, analyse }) {
     if (prev) notes.push(`Faint line: level ${prev.level}.`);
     if (typ) notes.push(`Shaded band: your slowest to fastest of ${levelList(typ.levels)}, dashed their median.`);
     if (prev || typ) notes.push('Other levels are scaled to this level\'s kanji count.');
+    if (isCurrent && !passedRun) notes.push('Earliest level-up assumes you do the pending lessons now and every review the moment it is available (4 h → 8 h → 23 h → 47 h to Guru, faster on levels 1–2). "At your pace" stretches that by how late your lessons and reviews were on your last three levels.');
     $('level-note').textContent = notes.join(' ');
   } else {
     $('level-chart').innerHTML = '';
