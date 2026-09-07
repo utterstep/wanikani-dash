@@ -99,7 +99,7 @@ async function refresh({ keepStatus = false } = {}) {
     const ranLessons = r.ran && lastSync ? st.srs_events.filter((e) => e.seen_at === lastSync.at && e.from === 0 && e.to > 0).length : 0;
     const delta = since > 0 && st.since > 0 ? pulled : r.ran ? { reviews: r.reviews, lessons: ranLessons, srsEvents: r.srsEvents - ranLessons } : null;
     if (st.account.status === 'auth_failed') openSettings('WaniKani rejected the token stored on the server. Paste a fresh one to resume collection.');
-    else if (r.ran && r.firstRun) setStatus('First sync done. Review history starts today and grows every 15 minutes on the server.', 'info');
+    else if (r.ran && r.firstRun) setStatus('First sync done. Review history starts today.', 'info');
     else if (delta && (delta.reviews || delta.lessons || delta.srsEvents)) setStatus(`${whatsNew(delta)} since last sync.`, 'info');
     else setStatus('');
   } catch (e) {

@@ -130,7 +130,7 @@ function renderDaily(model, now) {
   const since = model.historySince ? fmtDate(model.historySince) : null;
   const sinceKey = model.historySince ? dateKey(model.historySince) : '9999';
   const isGap = (d) => !d.synced && d.date > sinceKey;
-  $('history-note').textContent = since ? `Review history is collected on the server every 15 minutes since ${since}. Shaded days had no sync; their reviews land on the next sync day.` : '';
+  $('history-note').textContent = since ? `Review history recorded since ${since}. Shaded days were not recorded; their reviews show up on the next recorded day.` : '';
 
   $('reviews-chart').innerHTML = columnChart(series.map((d) => ({
     label: shortDay(d.date), value: d.reviews, cls: 'reviews', gap: isGap(d),
@@ -274,8 +274,10 @@ function renderLevel(model, now, { userLevel, current, analyse }) {
     });
     const prev = tl.series.find((s) => s.key === 'previous');
     const levelList = (ls) => (ls.length > 2 && ls.every((l, i) => !i || l === ls[i - 1] + 1) ? `levels ${ls[0]}–${ls.at(-1)}` : `level${ls.length > 1 ? 's' : ''} ${ls.join(', ')}`);
-    const notes = [`Kanji passed since level ${level} unlocked on ${fmtDate(tl.series[0].unlockedAt)}${prev ? `; the faint line is level ${prev.level}` : ''}${typ ? `; the shaded band spans your slowest to fastest of ${levelList(typ.levels)}, dashed is the median` : ''}${prev || typ ? ', scaled to this level\'s kanji count' : ''}.`];
-    if (isCurrent && !passedRun) notes.push('Earliest level-up assumes lessons now and every review the moment it is available (4 h → 8 h → 23 h → 47 h to Guru, faster on levels 1–2). "At your pace" stretches that by how late your lessons and reviews were on the last three levels.');
+    const notes = [`Kanji passed since level ${level} unlocked on ${fmtDate(tl.series[0].unlockedAt)}.`];
+    if (prev) notes.push(`Faint line: level ${prev.level}.`);
+    if (typ) notes.push(`Shaded band: your slowest to fastest of ${levelList(typ.levels)}, dashed their median.`);
+    if (prev || typ) notes.push('Other levels are scaled to this level\'s kanji count.');
     $('level-note').textContent = notes.join(' ');
   } else {
     $('level-chart').innerHTML = '';
@@ -372,7 +374,7 @@ function renderKanken(model) {
   if (outside.jinmeiyo.length || outside.other.length) {
     notes.push(`WaniKani also teaches ${(outside.jinmeiyo.length + outside.other.length).toLocaleString()} kanji outside the Jōyō list (${outside.jinmeiyo.length} jinmeiyō, ${outside.other.length} neither).`);
   }
-  notes.push('漢検 10級–5級 are exactly 小学1年–6年 of the 常用漢字表 and 2級 is the whole list, so Jōyō grades pin them down. 4級 / 3級 / 準2級 carve the 1,110 secondary-school kanji into 313 / 284 / 328 on a list the 日本漢字能力検定協会 publishes separately — grades cannot recover it, so those are greyed out rather than guessed. 準1級 is approximated as Jōyō + Jinmeiyō (2,999 of its ~3,000 kanji).');
+  notes.push('漢検 10級–5級 match 小学1年–6年 of the Jōyō list and 2級 is the whole list. 4級, 3級 and 準2級 split the secondary-school kanji on a list the 漢検 association publishes separately, so they are greyed out rather than guessed. 準1級 is approximated as Jōyō + Jinmeiyō.');
   notes.push('Grades from KANJIDIC2 © EDRDG, CC BY-SA 4.0.');
   $('kanken-note').innerHTML = notes.map(esc).join('<br>');
 }
