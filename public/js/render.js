@@ -93,7 +93,7 @@ function renderSrs(model) {
 
 function renderLoad(model, now) {
   const days = apprenticeLoad(model.assignments, model.srsEvents, now);
-  if (days.length < 2) { $('load-chart').innerHTML = ''; $('load-note').textContent = ''; return; }
+  if (days.length < 2) { $('load-chart').innerHTML = ''; return; }
   const start = new Date(`${days[0].date}T12:00:00Z`);
   const long = days.length > 400;
   const label = (i) => new Date(start.getTime() + i * 86_400_000).toLocaleDateString(undefined, long ? { month: 'short', year: '2-digit' } : { month: 'short', day: 'numeric' });
@@ -102,8 +102,6 @@ function renderLoad(model, now) {
     cls: 'apprentice', dots: false, endX: days.length - 1,
     points: days.map((d, i) => ({ x: i, y: d.count, tip: `${label(i)}: ${d.count} Apprentice` })),
   }], { title: 'Apprentice items over time', height: 180, width: widthOf('load-chart'), xLabel: label, threshold: { value: LIMIT, label: `${LIMIT} · a common comfort limit` } });
-  const collect = model.syncDates?.length ? fmtDate([...model.syncDates].sort()[0]) : null;
-  $('load-note').textContent = `Items in Apprentice each day, from lesson to Guru. Now ${days.at(-1).count}. Demotions back to Apprentice are counted from ${collect ?? 'when collection started'}; earlier ones are not visible in the WaniKani data.`;
 }
 
 function renderLevels(model, now) {
