@@ -56,7 +56,8 @@ level-up needs, and two dates:
   items with a review available now are outlined in blue.
 - **At your pace** stretches the same chain by how late your lessons (median wait after
   unlock) and reviews (median actual time from lesson to Guru over the theoretical minimum)
-  were on the last three completed levels.
+  were on the last three completed levels. The **Next level** summary card shows this date,
+  with the earliest one underneath.
 
 The chart underneath is the cumulative number of kanji passed since the level unlocked, with
 the previous level as a faint reference. Passing follows WaniKani's definition (`passed_at`),

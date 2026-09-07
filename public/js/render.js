@@ -60,13 +60,18 @@ function renderCards(model, now, current) {
   const today = dailySeries(model.srsEvents, model.reviewEvents, model.syncDates, 1, now)[0];
   const vacation = model.user?.current_vacation_started_at;
   const eta = current?.eta;
+  // Headline: the pace-adjusted item chain (same date as the panel's "At your pace"), never before the
+  // earliest possible date. Falls back to the median-pace projection when the chain has no answer.
+  const likelyAt = eta?.earliest.at
+    ? new Date(Math.max(eta.earliest.at.getTime(), eta.pace.at?.getTime() ?? 0))
+    : proj.nextLevelAt;
   const nextSub = eta?.earliest.at
     ? `earliest ${fmtDate(eta.earliest.at)} · ${eta.remaining} kanji to go`
     : proj.nextLevelIn != null ? `in ${fmtDays(proj.nextLevelIn)}` : 'need completed levels';
   $('cards').innerHTML = [
     card('Current level', model.user?.level ?? '—', vacation ? `on vacation since ${fmtDate(vacation)}` : `${fmtDays(proj.daysOnCurrent)} on this level`),
     card('Median pace', fmtDays(proj.pace), 'days per level, last 10 levels'),
-    card('Next level', proj.nextLevelAt ? fmtDate(proj.nextLevelAt) : '—', nextSub),
+    card('Next level', likelyAt ? fmtDate(likelyAt) : '—', nextSub),
     card('Level 60', proj.level60At ? fmtDate(proj.level60At) : '—', `${proj.levelsLeft} levels to go`),
     card('Reviews today', today.reviews.toLocaleString(), `▲${today.upTotal} ▼${today.downTotal} SRS moves`),
   ].join('');
