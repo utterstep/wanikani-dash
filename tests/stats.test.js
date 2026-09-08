@@ -130,6 +130,7 @@ describe('apprenticeLoad', () => {
       { subject_id: 2, from: 2, to: 3, at: '2026-01-05T09:00:00Z' },   // within Apprentice: no change
     ], new Date('2026-01-07T00:00:00Z'), 'utc');
     assertEqual(rows.map((r) => [r.date.slice(5), r.count]), [['01-01', 1], ['01-02', 3], ['01-03', 2], ['01-04', 1], ['01-05', 2], ['01-06', 1], ['01-07', 1]]);
+    assertEqual(rows.map((r) => r.downs), [0, 0, 0, 0, 1, 0, 0], 'demotions per day, promotions not counted');
   });
   it('is empty without any lesson', () => {
     assertEqual(apprenticeLoad([a(1, null)], [], new Date(), 'utc'), []);

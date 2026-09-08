@@ -263,7 +263,9 @@ export function apprenticeLoad(assignments, srsEvents, now = new Date(), tz) {
   }
   if (!first) return [];
   const open = new Set();
+  const downs = new Map();
   for (const e of [...srsEvents].sort((p, q) => p.at.localeCompare(q.at))) {
+    if (e.to < e.from) { const k = dateKey(e.at, tz); downs.set(k, (downs.get(k) ?? 0) + 1); }
     if (e.from >= 5 && e.to >= 1 && e.to < 5 && !open.has(e.subject_id)) { open.add(e.subject_id); bump(e.at, +1); }
     else if (e.to >= 5 && open.has(e.subject_id)) { open.delete(e.subject_id); bump(e.at, -1); }
   }
@@ -273,7 +275,7 @@ export function apprenticeLoad(assignments, srsEvents, now = new Date(), tz) {
   for (let d = new Date(`${dateKey(first, tz)}T12:00:00Z`); ; d = new Date(d.getTime() + DAY)) {
     const key = d.toISOString().slice(0, 10);
     count += delta.get(key) ?? 0;
-    out.push({ date: key, count });
+    out.push({ date: key, count, downs: downs.get(key) ?? 0 });
     if (key >= end) break;
   }
   return out;

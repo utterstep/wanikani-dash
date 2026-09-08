@@ -12,6 +12,7 @@
   --kanji: #ff00aa;
   --vocabulary: #aa00ff;
   --apprentice: #dd0093;
+  --demotions: #e5484d;
   --guru: #882d9e;
   --master: #294ddb;
   --enlightened: #0093dd;
@@ -132,6 +133,9 @@ main { display: grid; gap: 14px; margin-top: 8px; }
 .chart .line.typical { stroke: var(--ink-2); }
 .chart .band { fill: var(--level); opacity: .12; }
 .chart .line.apprentice { stroke: var(--apprentice); }
+.chart .bar.demotions { fill: var(--demotions); opacity: .35; }
+.chart .tick.demotions { fill: var(--demotions); }
+.swatch.demotions { background: var(--demotions); opacity: .6; }
 .mark.reviews { fill: var(--reviews); }
 .mark.level { fill: var(--level); }
 .mark.level-current { fill: var(--level-current); }

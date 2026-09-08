@@ -77,6 +77,16 @@ describe('stepChart', () => {
     assert(svg.querySelector('.hit').getAttribute('data-tip').startsWith('day 0'));
     assert(svg.textContent.includes('6'), 'y axis covers the band');
   });
+  it('draws bars on a right-hand axis behind the lines', () => {
+    const svg = parse(stepChart([{ cls: 'a', dots: false, endX: 3, points: [{ x: 0, y: 10 }, { x: 1, y: 12 }] }],
+      { title: 'T', bars: { cls: 'b', points: [{ x: 0, y: 0 }, { x: 1, y: 3 }, { x: 2, y: 7 }, { x: 3, y: 0 }] } }));
+    assertEqual(svg.querySelectorAll('rect.bar.b').length, 2, 'zero-height bars are skipped');
+    assert(svg.querySelector('text.tick.b') !== null, 'right axis ticks carry the bar class');
+    assert([...svg.querySelectorAll('text.tick.b')].some((t) => t.textContent === '6'), 'right axis is scaled to the bars, not the lines');
+    const nodes = [...svg.children];
+    assert(nodes.findIndex((n) => n.matches('rect.bar')) < nodes.findIndex((n) => n.matches('path.line')), 'bars are behind the line');
+    assertEqual(parse(stepChart([], { title: 'T', bars: { points: [] } })).tagName, 'svg');
+  });
   it('copes with empty series', () => {
     assertEqual(parse(stepChart([{ cls: 'x', points: [] }], { title: 'T' })).tagName, 'svg');
     assertEqual(parse(stepChart([], { title: 'T' })).tagName, 'svg');

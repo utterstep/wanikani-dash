@@ -152,18 +152,22 @@ export function stackedBars(rows, opts = {}) {
 /**
  * Step lines (cumulative counts over x). Each series is drawn as a staircase from its first
  * point to `endX`, with a dot per point unless muted or `dots: false`; `hits: false` drops the
- * tooltips too. Bands (`{x, lo, hi}` samples) are filled behind the lines.
+ * tooltips too. Bands (`{x, lo, hi}` samples) are filled behind the lines. `bars` is a second,
+ * per-x quantity drawn as columns behind everything on its own right-hand axis (no tooltips of
+ * its own: put the value into the line's tips).
  * @param {{cls:string, points:{x:number,y:number,tip?:string}[], endX?:number, muted?:boolean, dashed?:boolean, dots?:boolean, hits?:boolean}[]} series
  * @param {{title:string, width?:number, height?:number, threshold?:{value:number,label:string},
- *          bands?:{cls?:string, points:{x:number,lo:number,hi:number}[]}[], xLabel?:(x:number)=>string}} opts
+ *          bands?:{cls?:string, points:{x:number,lo:number,hi:number}[]}[], xLabel?:(x:number)=>string,
+ *          bars?:{cls?:string, points:{x:number,y:number}[]}}} opts
  */
 export function stepChart(series, opts = {}) {
-  const H = opts.height ?? 200, padL = 36, padR = 12, padT = 12, padB = 22;
+  const bars = opts.bars;
+  const H = opts.height ?? 200, padL = 36, padR = bars ? 30 : 12, padT = 12, padB = 22;
   const W = opts.width ?? 640;
   const bands = opts.bands ?? [];
   const xLabel = opts.xLabel ?? ((v) => `${fmt(v)}d`);
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const xs = [...series.flatMap((s) => [s.endX ?? 0, ...s.points.map((p) => p.x)]), ...bands.flatMap((b) => b.points.map((p) => p.x))];
+  const xs = [...series.flatMap((s) => [s.endX ?? 0, ...s.points.map((p) => p.x)]), ...bands.flatMap((b) => b.points.map((p) => p.x)), ...(bars?.points ?? []).map((p) => p.x)];
   const ys = [...series.flatMap((s) => s.points.map((p) => p.y)), ...bands.flatMap((b) => b.points.map((p) => p.hi))];
   const xMax = Math.max(1, ...xs);
   const xTicks = niceTicks(xMax, 5, { integer: true });
@@ -176,6 +180,17 @@ export function stepChart(series, opts = {}) {
   let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.title)}">`;
   for (const t of yTicks) s += `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}"/><text class="tick" x="${padL - 6}" y="${y(t) + 3}" text-anchor="end">${fmt(t)}</text>`;
   for (const t of xTicks) s += `<text class="tick" x="${x(t)}" y="${H - 6}" text-anchor="middle">${esc(xLabel(t))}</text>`;
+  if (bars) {
+    const bTicks = niceTicks(Math.max(0, ...bars.points.map((p) => p.y)), 3, { integer: true });
+    const bTop = bTicks[bTicks.length - 1] || 1;
+    const yb = (v) => padT + plotH - (v / bTop) * plotH;
+    for (const t of bTicks) if (t) s += `<text class="tick ${bars.cls ?? ''}" x="${W - padR + 6}" y="${yb(t) + 3}" text-anchor="start">${fmt(t)}</text>`;
+    const bw = Math.max(1, (plotW / xTop) * 0.7);
+    for (const p of bars.points) {
+      if (!p.y) continue;
+      s += `<rect class="bar ${bars.cls ?? ''}" x="${x(p.x) - bw / 2}" y="${yb(p.y)}" width="${bw}" height="${padT + plotH - yb(p.y)}"/>`;
+    }
+  }
   for (const b of bands) {
     const pts = b.points;
     if (pts.length < 2) continue;

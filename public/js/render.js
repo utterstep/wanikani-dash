@@ -15,7 +15,7 @@ const fmtDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { year: 'n
 const fmtDateTime = (d) => (d ? new Date(d).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
 const fmtDays = (d) => (d == null ? '—' : d < 1 ? `${Math.round(d * 24)} h` : `${d.toFixed(1)} d`);
 const shortDay = (key) => { const [, m, d] = key.split('-'); return `${Number(d)}/${Number(m)}`; };
-const STAGE_NAME = ['Locked', 'Apprentice I', 'Apprentice II', 'Apprentice III', 'Apprentice IV', 'Guru I', 'Guru II', 'Master', 'Enlightened', 'Burned'];
+const STAGE_NAME = ['In lessons', 'Apprentice I', 'Apprentice II', 'Apprentice III', 'Apprentice IV', 'Guru I', 'Guru II', 'Master', 'Enlightened', 'Burned'];
 
 export function renderAll(model, { now = new Date() } = {}) {
   const level = levelAnalysis(model, now);
@@ -98,11 +98,26 @@ function renderLoad(model, now) {
   const long = days.length > 400;
   const label = (i) => new Date(start.getTime() + i * 86_400_000).toLocaleDateString(undefined, long ? { month: 'short', year: '2-digit' } : { month: 'short', day: 'numeric' });
   const LIMIT = 100;
+  // Demotions (one per wrong review session) exist only since the server started recording.
+  // Events carry WaniKani's own timestamp, which can precede the first sync by a little.
+  const since = [model.historySince, ...model.srsEvents.map((e) => e.at)].filter(Boolean).sort()[0];
+  const sinceKey = since ? dateKey(since) : null;
+  const recorded = (d) => sinceKey != null && d.date >= sinceKey;
+  const hasBars = days.some(recorded);
   $('load-chart').innerHTML = stepChart([{
     cls: 'apprentice', dots: false, endX: days.length - 1,
-    points: days.map((d, i) => ({ x: i, y: d.count, tip: `${label(i)}: ${d.count} Apprentice` })),
-  }], { title: 'Apprentice items over time', height: 180, width: widthOf('load-chart'), xLabel: label, threshold: { value: LIMIT, label: `${LIMIT} · a common comfort limit` } });
+    points: days.map((d, i) => ({ x: i, y: d.count, tip: `${label(i)}: ${d.count} Apprentice${recorded(d) ? ` · ${plural(d.downs, 'demotion')}` : ''}` })),
+  }], {
+    title: 'Apprentice items over time', height: 180, width: widthOf('load-chart'), xLabel: label,
+    threshold: { value: LIMIT, label: `${LIMIT} · a common comfort limit` },
+    bars: hasBars ? { cls: 'demotions', points: days.map((d, i) => ({ x: i, y: recorded(d) ? d.downs : 0 })) } : undefined,
+  }) + legend([
+    { cls: 'srs-apprentice', name: 'Items in Apprentice' },
+    ...(hasBars ? [{ cls: 'demotions', name: `SRS demotions per day (right axis), recorded since ${fmtDate(since)}` }] : []),
+  ]);
 }
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 function renderLevels(model, now) {
   const rows = levelDurations(model.progressions, now);
@@ -286,18 +301,33 @@ function renderLevel(model, now, { userLevel, current, analyse }) {
   }
 }
 
+const TYPE_NAME = { radical: 'Radical', kanji: 'Kanji', vocabulary: 'Vocabulary' };
+
+/**
+ * The one tooltip layout for every item cell (level grid, Kanken heat map):
+ *   characters · meaning · reading
+ *   type · level (· extra place, e.g. the Kanken grade)
+ *   SRS stage
+ *   any item-specific lines
+ */
+function itemTip({ characters, meaning, reading, type, level, srs_stage, state, place }, extras = []) {
+  const name = [characters ?? meaning, characters ? meaning : null, reading].filter(Boolean).join(' · ');
+  const where = state === 'absent' ? ['Not on WaniKani', place] : [TYPE_NAME[type] ?? type, level != null ? `level ${level}` : null, place];
+  const stage = state === 'absent' ? null : srs_stage == null ? 'Locked' : STAGE_NAME[srs_stage];
+  return [name, where.filter(Boolean).join(' · '), stage, ...extras].filter(Boolean).join('\n');
+}
+
 function levelCell(it, path, isBottleneck, radicalName) {
-  const name = it.characters ?? it.meaning;
-  const lines = [`${name}${it.characters ? ` · ${it.meaning}` : ''}${it.reading ? ` · ${it.reading}` : ''}`, it.srs_stage == null ? 'Locked' : STAGE_NAME[it.srs_stage]];
-  if (it.dueNow) lines.push('review available now');
-  else if (it.available_at && it.srs_stage > 0 && it.srs_stage < 9) lines.push(`next review ${fmtDateTime(it.available_at)}`);
-  if (path?.locked && path.gateRadical) lines.push(`unlocks after ${radicalName(path.gateRadical)}`);
-  if (isBottleneck) lines.push('sets the earliest level-up date');
+  const extras = [];
+  if (it.dueNow) extras.push('review available now');
+  else if (it.available_at && it.srs_stage > 0 && it.srs_stage < 9) extras.push(`next review ${fmtDateTime(it.available_at)}`);
+  if (path?.locked && path.gateRadical) extras.push(`unlocks after ${radicalName(path.gateRadical)}`);
+  if (isBottleneck) extras.push('sets the earliest level-up date');
   const cls = `heat hit st-${it.state}${it.type === 'vocabulary' ? ' wide' : ''}${it.dueNow ? ' due' : ''}${isBottleneck ? ' bottleneck' : ''}`;
   const body = it.characters ? esc(it.characters)
     : it.image ? `<img class="radical-img" src="${esc(it.image)}" alt="${esc(it.meaning)}">`
       : `<span class="heat-text">${esc(it.meaning)}</span>`;
-  const attrs = `class="${cls}" data-tip="${esc(lines.join('\n'))}"`;
+  const attrs = `class="${cls}" data-tip="${esc(itemTip(it, extras))}"`;
   return it.url ? `<a ${attrs} href="${esc(it.url)}" target="_blank" rel="noopener">${body}</a>` : `<span ${attrs}>${body}</span>`;
 }
 
@@ -391,9 +421,7 @@ function strip(counts, total, what) {
 }
 
 function heatCell(c) {
-  const where = c.wkLevel ? `${GRADE_SHORT[c.grade]} · WK level ${c.wkLevel}` : `${GRADE_SHORT[c.grade]} · not on WaniKani`;
-  const gloss = c.meaning ? `\n${c.meaning}${c.reading ? ` · ${c.reading}` : ''}` : '';
-  const tip = `${c.ch}\n${where}\n${STATE_NAME[c.state]}${gloss}`;
+  const tip = itemTip({ characters: c.ch, meaning: c.meaning, reading: c.reading, type: 'kanji', level: c.wkLevel, srs_stage: c.srs_stage, state: c.state, place: GRADE_SHORT[c.grade] });
   const attrs = `class="heat hit st-${c.state}" data-tip="${esc(tip)}"`;
   return c.url
     ? `<a ${attrs} href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.ch)}</a>`

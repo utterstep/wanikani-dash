@@ -49,6 +49,7 @@ agent-browser eval 'document.getElementById("level-select").value' | grep -q '"4
 agent-browser eval 'document.querySelectorAll("#level-summary .mini").length >= 3' | grep -q true || { echo "FAIL: level summary cards"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#level-grid details .heat").length' | grep -q 1 || { echo "FAIL: level 4 has one kanji in the fixture"; fail=1; }
 agent-browser eval 'document.querySelector("#level-chart svg.chart") !== null' | grep -q true || { echo "FAIL: level timeline"; fail=1; }
+agent-browser eval 'document.querySelector("#level-grid .heat").dataset.tip.split("\n")[1]' | grep -q "Kanji · level 4" || { echo "FAIL: level cell tooltip layout"; fail=1; }
 agent-browser eval 'document.querySelector("#cards .card:nth-child(3) .card-sub").textContent' | grep -q "earliest" || { echo "FAIL: next-level card lacks the ETA"; fail=1; }
 agent-browser eval '(() => { const s = document.getElementById("level-select"); s.value = "3"; s.dispatchEvent(new Event("change")); return document.querySelectorAll("#level-grid details .heat").length; })()' | grep -q 3 || { echo "FAIL: level 3 items"; fail=1; }
 agent-browser eval 'document.querySelector("#level-summary").textContent' | grep -q "Level passed" || { echo "FAIL: past level shows pass date"; fail=1; }
@@ -58,6 +59,7 @@ agent-browser eval '(() => { const s = document.getElementById("level-select"); 
 echo "== e2e: kanken heat map"
 agent-browser eval 'document.querySelectorAll("#kanken-select option").length' | grep -q 11 || { echo "FAIL: kanken levels"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#kanken-select option[disabled]").length' | grep -q 3 || { echo "FAIL: 4級/3級/準2級 should be disabled"; fail=1; }
+agent-browser eval '[...document.querySelectorAll("#kanken-heat .heat[data-tip]")].some((c) => /^Kanji · level \d+ · 小\d$/m.test(c.dataset.tip))' | grep -q true || { echo "FAIL: kanken cell tooltip layout"; fail=1; }
 agent-browser eval 'document.getElementById("kanken-select").value' | grep -q '"5"' || { echo "FAIL: kanken default level"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#kanken-heat details.heat-grade").length' | grep -q 6 || { echo "FAIL: one section per school grade"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#kanken-legend .heat").length' | grep -q 8 || { echo "FAIL: legend sample cells"; fail=1; }
@@ -73,6 +75,7 @@ echo "== e2e: reopening later pulls what the server collected (scenario b)"
 agent-browser open "$APP?mock=b" >/dev/null
 agent-browser wait --fn '!document.getElementById("dashboard").hidden && /SRS changes/.test(document.getElementById("status").textContent)' >/dev/null
 status | grep -q "+3 reviews, 1 lesson, 3 SRS changes" || { echo "FAIL: second sync status: $(status)"; fail=1; }
+agent-browser eval 'document.querySelectorAll("#load-chart rect.bar.demotions").length' | grep -q 1 || { echo "FAIL: the 4→3 demotion should show as a bar on the load chart"; fail=1; }
 agent-browser eval 'document.querySelectorAll("#actions a.cta").length' | grep -q 2 || { echo "FAIL: lesson/review buttons"; fail=1; }
 agent-browser eval 'Object.values(JSON.parse(localStorage.__mock_server))[0].meta.find(([k]) => k === "version")[1]' | grep -q '^2$' || { echo "FAIL: server state not persisted at version 2"; fail=1; }
 agent-browser screenshot tests/screenshot-b.png >/dev/null

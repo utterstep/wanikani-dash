@@ -74,8 +74,11 @@ the subjects once (progress bar) the first time it opens this version.
 
 Items in Apprentice on each day since your first lesson, reconstructed from `started_at` and
 `passed_at`, with a dashed line at 100, the limit many people keep their Apprentice pile under.
-WaniKani only records when an item first passed, so trips back down to Apprentice are patched
-in from the SRS events the server collects, and are invisible before collection started.
+Behind the line, faint red bars count the SRS demotions of each day (one per item you got
+wrong in a review session) on their own right-hand axis, so you can see where a heavier pile
+started costing accuracy. WaniKani only records when an item first passed, so trips back down
+to Apprentice are patched in from the SRS events the server collects, and both the patches and
+the bars are invisible before collection started.
 
 ## Kanken coverage
 
