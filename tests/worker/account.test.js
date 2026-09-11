@@ -2,6 +2,7 @@
 // api.wanikani.com is played by tests/worker/wk-mock.mjs (see vitest.config.mjs).
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SELF, env, runInDurableObject, runDurableObjectAlarm } from 'cloudflare:test';
+import { LEVELUP_BATCH } from '../fixtures/synthetic.js';
 
 const USER_ID = '5a6a5234-a392-4a87-8f3f-33342afe8a42'; // tests/fixtures/synthetic.js
 const TOKEN = 'test-token';
@@ -86,6 +87,20 @@ describe('worker', () => {
     r = await api('GET', '/state?since=0', { token: TOKEN2 });
     expect(r.body.srs_events).toHaveLength(4);
     expect(await meta('token')).toBe(TOKEN2);
+  });
+
+  it('takes a level-up batch of more than 100 rows in one sync', async () => {
+    await api('POST', '/sync'); // bootstrap on scenario a
+
+    // scenario levelup = a level-up unlocked LEVELUP_BATCH items at once; the diff looks every one
+    // of them up in the stored snapshot, which is more keys than a statement can bind at a time
+    await setScenario('levelup');
+    expect(await runDurableObjectAlarm(stub())).toBe(true);
+
+    const r = await api('GET', '/state?since=0');
+    expect(r.body.account.version).toBe(2);
+    expect(r.body.assignments).toHaveLength(8 + LEVELUP_BATCH);
+    expect(r.body.assignments.at(-1)).toMatchObject({ subject_id: 1000 + LEVELUP_BATCH - 1, srs_stage: 1 });
   });
 
   it('seed, refuse second seed, delete', async () => {

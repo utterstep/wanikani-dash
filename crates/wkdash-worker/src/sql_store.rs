@@ -85,6 +85,11 @@ impl SqlStore {
     }
 }
 
+/// A statement in a Durable Object's SQLite takes at most 100 bound parameters, so `key IN (…)`
+/// lookups go out in chunks of that many keys. A level-up updates far more rows than that in one
+/// sync (the new level's radicals and kanji, the previous level's vocabulary).
+const MAX_BINDINGS: usize = 100;
+
 fn int(v: i64) -> SqlStorageValue {
     SqlStorageValue::Integer(v)
 }
@@ -112,7 +117,7 @@ impl Store for SqlStore {
 
     fn get_many(&self, table: Table, keys: &[i64]) -> Result<Vec<Option<String>>, StoreError> {
         let mut found = std::collections::HashMap::with_capacity(keys.len());
-        for chunk in keys.chunks(200) {
+        for chunk in keys.chunks(MAX_BINDINGS) {
             let marks = vec!["?"; chunk.len()].join(",");
             let rows: Vec<DataRow> = self
                 .exec(
