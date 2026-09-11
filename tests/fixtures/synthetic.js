@@ -1,10 +1,14 @@
 // Synthetic WK API fixtures in raw resource shape. Deterministic.
-// scenario 'a' = baseline snapshot; 'b' = a few days later, after some reviews.
+// scenario 'a' = baseline snapshot; 'b' = a few days later, after some reviews;
+// 'levelup' = 'a' plus a level-up's worth of freshly unlocked items, all updated at once.
 
 const ISO = (d) => new Date(d).toISOString();
 const DAY = 86_400_000;
 export const NOW_A = Date.parse('2026-08-20T10:00:00Z');
 export const NOW_B = Date.parse('2026-08-22T09:00:00Z');
+
+/** Items the 'levelup' scenario unlocks in one sync. Over SQLite's 100 bound parameters per statement. */
+export const LEVELUP_BATCH = 130;
 
 const SUBJECTS = [
   { id: 1, object: 'radical', level: 1, characters: '一', slug: 'ground', meanings: [{ meaning: 'Ground', primary: true }], character_images: [{ url: 'https://cdn.wanikani.com/images/legacy/ground.svg', content_type: 'image/svg+xml', metadata: { inline_styles: true } }] },
@@ -36,7 +40,7 @@ const PROGRESSIONS = [
 ];
 
 export function fixtures(scenario = 'a') {
-  const now = scenario === 'b' ? NOW_B : NOW_A;
+  const now = scenario === 'a' ? NOW_A : NOW_B;
   const user = { object: 'user', data_updated_at: ISO(now), data: { id: '5a6a5234-a392-4a87-8f3f-33342afe8a42', username: 'testuser', level: 4, started_at: ISO(NOW_A - 40 * DAY), current_vacation_started_at: null, subscription: { active: true, type: 'lifetime', max_level_granted: 60 } } };
 
   const subjects = SUBJECTS.map((s) => ({ id: s.id, object: s.object, data_updated_at: ISO(NOW_A - 100 * DAY), data: { ...s, document_url: `https://www.wanikani.com/${s.object}/${s.slug}`, hidden_at: null, readings: s.readings ?? [] } }));
@@ -75,6 +79,31 @@ export function fixtures(scenario = 'a') {
       data: { subject_id: id, subject_type: sub.object, meaning_correct: mc, meaning_incorrect: mi, reading_correct: rc, reading_incorrect: ri, meaning_current_streak: ms, reading_current_streak: rs, meaning_max_streak: ms, reading_max_streak: rs, percentage_correct: Math.round(((mc + rc) / Math.max(1, mc + mi + rc + ri)) * 100), hidden: false },
     };
   });
+
+  // A level-up unlocks the new level's radicals and kanji plus the previous level's vocabulary, so
+  // one incremental sync carries far more rows than a review does.
+  if (scenario === 'levelup') {
+    const at = ISO(NOW_B - 20 * 3600_000);
+    for (let i = 0; i < LEVELUP_BATCH; i++) {
+      const subject_id = 1000 + i;
+      assignments.push({
+        id: 1000 + i, object: 'assignment', data_updated_at: at,
+        data: {
+          subject_id, subject_type: 'vocabulary', srs_stage: 1,
+          unlocked_at: at, started_at: at, passed_at: null, burned_at: null,
+          available_at: ISO(NOW_B + 4 * 3600_000), hidden: false,
+        },
+      });
+      review_statistics.push({
+        id: 2000 + i, object: 'review_statistic', data_updated_at: at,
+        data: {
+          subject_id, subject_type: 'vocabulary', meaning_correct: 1, meaning_incorrect: 0,
+          reading_correct: 1, reading_incorrect: 0, meaning_current_streak: 1, reading_current_streak: 1,
+          meaning_max_streak: 1, reading_max_streak: 1, percentage_correct: 100, hidden: false,
+        },
+      });
+    }
+  }
 
   const level_progressions = PROGRESSIONS.map((p, i) => ({
     id: 300 + i, object: 'level_progression', data_updated_at: ISO(NOW_A),
